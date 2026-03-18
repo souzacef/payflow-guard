@@ -15,13 +15,16 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 ## Current Focus
 - [x] Check installed tools
 - [x] Create GitHub repository
-- [ ] Install Java 21
-- [ ] Install Maven
-- [ ] Create Spring Boot project
-- [ ] Run application locally
+- [x] Install Java 21
+- [x] Install Maven
+- [x] Create Spring Boot project
+- [x] Run application locally
+- [x] Create first endpoint
 
 ## Done
 - [x] Repository created
 - [x] Git confirmed
 - [x] VS Code confirmed
 - [x] Docker confirmed
+- [x] Spring Boot application starts without database
+- [x] First /health endpoint created
