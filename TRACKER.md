@@ -28,3 +28,6 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Docker confirmed
 - [x] Spring Boot application starts without database
 - [x] First /health endpoint created
+- [x] Spring Security default login understood
+- [x] /health endpoint made public
+- [x] First security configuration created
