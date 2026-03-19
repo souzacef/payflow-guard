@@ -52,6 +52,9 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Fix security so validation errors return through /error
 - [x] Valid merchant request returns 200
 - [x] Invalid merchant request returns 400
+- [x] Create ErrorResponse model
+- [x] Implement global exception handler
+- [x] Customize validation error responses
 
 ## Notes
 - Spring Boot auto-configures DB when JPA is present
