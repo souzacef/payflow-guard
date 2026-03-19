@@ -3,6 +3,7 @@ package com.carlos.payflowguard.merchant.controller;
 import com.carlos.payflowguard.merchant.dto.CreateMerchantRequest;
 import com.carlos.payflowguard.merchant.dto.MerchantResponse;
 import com.carlos.payflowguard.merchant.service.MerchantService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,7 +22,7 @@ public class MerchantController {
     }
 
     @PostMapping
-    public MerchantResponse createMerchant(@RequestBody CreateMerchantRequest request) {
+    public MerchantResponse createMerchant(@Valid @RequestBody CreateMerchantRequest request) {
         return merchantService.createMerchant(request);
     }
 }

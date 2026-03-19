@@ -49,6 +49,9 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Disable form login for API development
 - [x] Disable CSRF temporarily for POST testing
 - [x] Enable public merchant endpoints
+- [x] Fix security so validation errors return through /error
+- [x] Valid merchant request returns 200
+- [x] Invalid merchant request returns 400
 
 ## Notes
 - Spring Boot auto-configures DB when JPA is present
