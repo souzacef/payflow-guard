@@ -31,3 +31,15 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Spring Security default login understood
 - [x] /health endpoint made public
 - [x] First security configuration created
+- [x] Create package structure
+- [x] Convert /health to JSON response
+- [x] Create /api/v1/test endpoint
+- [x] Allow public access to test endpoints
+
+## Notes
+- Spring Boot auto-configures DB when JPA is present
+- Security adds login page automatically
+- SecurityFilterChain controls endpoint access
+- APIs usually return JSON
+- Versioned endpoints use paths like /api/v1
+- Security rules can expose specific routes publicly
