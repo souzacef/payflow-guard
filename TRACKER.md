@@ -43,6 +43,9 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Create Merchant entity class
 - [x] Create MerchantResponse DTO
 - [x] Create sample merchant endpoint
+- [x] Create MerchantService
+- [x] Move business logic from controller to service
+- [x] Controller now uses dependency injection
 
 ## Notes
 - Spring Boot auto-configures DB when JPA is present
