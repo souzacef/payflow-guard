@@ -6,6 +6,9 @@ import com.carlos.payflowguard.merchant.entity.Merchant;
 import com.carlos.payflowguard.merchant.repository.MerchantRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class MerchantService {
 
@@ -37,6 +40,30 @@ public class MerchantService {
                 savedMerchant.getBusinessName(),
                 savedMerchant.getEmail(),
                 savedMerchant.getStatus()
+        );
+    }
+
+    public List<MerchantResponse> getAllMerchants() {
+        return merchantRepository.findAll()
+                .stream()
+                .map(merchant -> new MerchantResponse(
+                        merchant.getId(),
+                        merchant.getBusinessName(),
+                        merchant.getEmail(),
+                        merchant.getStatus()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    public MerchantResponse getMerchantById(Long id) {
+        Merchant merchant = merchantRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Merchant not found"));
+
+        return new MerchantResponse(
+                merchant.getId(),
+                merchant.getBusinessName(),
+                merchant.getEmail(),
+                merchant.getStatus()
         );
     }
 }

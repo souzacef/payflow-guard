@@ -6,6 +6,8 @@ import com.carlos.payflowguard.merchant.service.MerchantService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/merchants")
 public class MerchantController {
@@ -24,5 +26,15 @@ public class MerchantController {
     @PostMapping
     public MerchantResponse createMerchant(@Valid @RequestBody CreateMerchantRequest request) {
         return merchantService.createMerchant(request);
+    }
+
+    @GetMapping
+    public List<MerchantResponse> getAllMerchants() {
+        return merchantService.getAllMerchants();
+    }
+
+    @GetMapping("/{id}")
+    public MerchantResponse getMerchantById(@PathVariable Long id) {
+        return merchantService.getMerchantById(id);
     }
 }

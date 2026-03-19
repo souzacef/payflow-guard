@@ -61,6 +61,9 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Convert Merchant into JPA entity
 - [x] Create MerchantRepository
 - [x] Persist merchants to PostgreSQL
+- [x] Add GET /api/v1/merchants
+- [x] Add GET /api/v1/merchants/{id}
+- [x] Retrieve data from PostgreSQL
 
 ## Notes
 - Spring Boot auto-configures DB when JPA is present
