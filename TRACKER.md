@@ -35,6 +35,10 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Convert /health to JSON response
 - [x] Create /api/v1/test endpoint
 - [x] Allow public access to test endpoints
+- [x] Create reusable ApiResponse class
+- [x] Update test endpoint to use ApiResponse
+- [x] Create root endpoint
+- [x] Allow root endpoint in security
 
 ## Notes
 - Spring Boot auto-configures DB when JPA is present
