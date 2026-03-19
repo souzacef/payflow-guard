@@ -46,6 +46,9 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Create MerchantService
 - [x] Move business logic from controller to service
 - [x] Controller now uses dependency injection
+- [x] Disable form login for API development
+- [x] Disable CSRF temporarily for POST testing
+- [x] Enable public merchant endpoints
 
 ## Notes
 - Spring Boot auto-configures DB when JPA is present
