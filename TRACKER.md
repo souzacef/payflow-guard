@@ -39,6 +39,10 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Update test endpoint to use ApiResponse
 - [x] Create root endpoint
 - [x] Allow root endpoint in security
+- [x] Create merchant module
+- [x] Create Merchant entity class
+- [x] Create MerchantResponse DTO
+- [x] Create sample merchant endpoint
 
 ## Notes
 - Spring Boot auto-configures DB when JPA is present
