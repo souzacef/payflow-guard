@@ -1,7 +1,10 @@
 package com.carlos.payflowguard.common.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.Map;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
 
     private String status;
@@ -15,6 +18,11 @@ public class ErrorResponse {
         this.status = status;
         this.message = message;
         this.errors = errors;
+    }
+
+    public ErrorResponse(String status, String message) {
+        this.status = status;
+        this.message = message;
     }
 
     public String getStatus() {

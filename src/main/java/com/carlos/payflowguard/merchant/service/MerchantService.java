@@ -1,5 +1,6 @@
 package com.carlos.payflowguard.merchant.service;
 
+import com.carlos.payflowguard.common.exception.ResourceNotFoundException;
 import com.carlos.payflowguard.merchant.dto.CreateMerchantRequest;
 import com.carlos.payflowguard.merchant.dto.MerchantResponse;
 import com.carlos.payflowguard.merchant.entity.Merchant;
@@ -57,7 +58,7 @@ public class MerchantService {
 
     public MerchantResponse getMerchantById(Long id) {
         Merchant merchant = merchantRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Merchant not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
 
         return new MerchantResponse(
                 merchant.getId(),
