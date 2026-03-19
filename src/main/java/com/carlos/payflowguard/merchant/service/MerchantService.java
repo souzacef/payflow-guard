@@ -67,4 +67,11 @@ public class MerchantService {
                 merchant.getStatus()
         );
     }
+
+    public void deleteMerchantById(Long id) {
+        Merchant merchant = merchantRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
+
+        merchantRepository.delete(merchant);
+    }
 }

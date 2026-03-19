@@ -64,6 +64,9 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Add GET /api/v1/merchants
 - [x] Add GET /api/v1/merchants/{id}
 - [x] Retrieve data from PostgreSQL
+- [x] Add DELETE /api/v1/merchants/{id}
+- [x] Return 204 when deletion succeeds
+- [x] Return 404 when deleting a missing merchant
 
 ## Notes
 - Spring Boot auto-configures DB when JPA is present

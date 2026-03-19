@@ -4,6 +4,7 @@ import com.carlos.payflowguard.merchant.dto.CreateMerchantRequest;
 import com.carlos.payflowguard.merchant.dto.MerchantResponse;
 import com.carlos.payflowguard.merchant.service.MerchantService;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,5 +37,11 @@ public class MerchantController {
     @GetMapping("/{id}")
     public MerchantResponse getMerchantById(@PathVariable Long id) {
         return merchantService.getMerchantById(id);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMerchantById(@PathVariable Long id) {
+        merchantService.deleteMerchantById(id);
+        return ResponseEntity.noContent().build();
     }
 }
