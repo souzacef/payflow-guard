@@ -1,3 +1,13 @@
 spring:
   application:
     name: payflowguard
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/payflowguard
+    username: postgres
+    password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true

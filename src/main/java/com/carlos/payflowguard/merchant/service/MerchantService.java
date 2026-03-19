@@ -2,10 +2,18 @@ package com.carlos.payflowguard.merchant.service;
 
 import com.carlos.payflowguard.merchant.dto.CreateMerchantRequest;
 import com.carlos.payflowguard.merchant.dto.MerchantResponse;
+import com.carlos.payflowguard.merchant.entity.Merchant;
+import com.carlos.payflowguard.merchant.repository.MerchantRepository;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MerchantService {
+
+    private final MerchantRepository merchantRepository;
+
+    public MerchantService(MerchantRepository merchantRepository) {
+        this.merchantRepository = merchantRepository;
+    }
 
     public MerchantResponse getSampleMerchant() {
         return new MerchantResponse(
@@ -17,13 +25,18 @@ public class MerchantService {
     }
 
     public MerchantResponse createMerchant(CreateMerchantRequest request) {
-        // Fake creation (no database yet)
+        Merchant merchant = new Merchant();
+        merchant.setBusinessName(request.getBusinessName());
+        merchant.setEmail(request.getEmail());
+        merchant.setStatus("ACTIVE");
+
+        Merchant savedMerchant = merchantRepository.save(merchant);
 
         return new MerchantResponse(
-                2L,
-                request.getBusinessName(),
-                request.getEmail(),
-                "ACTIVE"
+                savedMerchant.getId(),
+                savedMerchant.getBusinessName(),
+                savedMerchant.getEmail(),
+                savedMerchant.getStatus()
         );
     }
 }

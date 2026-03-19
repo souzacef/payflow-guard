@@ -55,6 +55,12 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Create ErrorResponse model
 - [x] Implement global exception handler
 - [x] Customize validation error responses
+- [x] Create Docker Compose file for PostgreSQL
+- [x] Start PostgreSQL container
+- [x] Configure Spring datasource in application.yml
+- [x] Convert Merchant into JPA entity
+- [x] Create MerchantRepository
+- [x] Persist merchants to PostgreSQL
 
 ## Notes
 - Spring Boot auto-configures DB when JPA is present
