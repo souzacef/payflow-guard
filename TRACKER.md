@@ -100,3 +100,7 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Add filtering by email
 - [x] Add filtering by businessName
 - [x] Add sorting support
+- [x] Add user entity
+- [x] Fix reserved table name (users)
+- [x] Implement register/login
+- [x] Generate JWT tokens
