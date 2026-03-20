@@ -97,3 +97,6 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Use Pageable and Page<T>
 - [x] Customize pagination response
 - [x] Hide internal Spring Page structure
+- [x] Add filtering by email
+- [x] Add filtering by businessName
+- [x] Add sorting support

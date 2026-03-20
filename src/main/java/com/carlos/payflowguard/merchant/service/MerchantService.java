@@ -35,8 +35,20 @@ public class MerchantService {
         );
     }
 
-    public PageResponse<MerchantResponse> getAllMerchants(Pageable pageable) {
-        Page<Merchant> page = merchantRepository.findAll(pageable);
+    public PageResponse<MerchantResponse> getAllMerchants(
+            String email,
+            String businessName,
+            Pageable pageable
+    ) {
+        Page<Merchant> page;
+
+        if (email != null && !email.isBlank()) {
+            page = merchantRepository.findByEmailContainingIgnoreCase(email, pageable);
+        } else if (businessName != null && !businessName.isBlank()) {
+            page = merchantRepository.findByBusinessNameContainingIgnoreCase(businessName, pageable);
+        } else {
+            page = merchantRepository.findAll(pageable);
+        }
 
         return new PageResponse<>(
                 page.getContent().stream()

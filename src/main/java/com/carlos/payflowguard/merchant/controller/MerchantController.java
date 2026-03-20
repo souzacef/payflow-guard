@@ -25,8 +25,12 @@ public class MerchantController {
     }
 
     @GetMapping
-    public PageResponse<MerchantResponse> getAllMerchants(Pageable pageable) {
-        return merchantService.getAllMerchants(pageable);
+    public PageResponse<MerchantResponse> getAllMerchants(
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String businessName,
+            Pageable pageable
+    ) {
+        return merchantService.getAllMerchants(email, businessName, pageable);
     }
 
     @GetMapping("/{id}")
