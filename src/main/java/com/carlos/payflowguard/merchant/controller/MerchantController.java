@@ -1,10 +1,10 @@
 package com.carlos.payflowguard.merchant.controller;
 
+import com.carlos.payflowguard.common.response.PageResponse;
 import com.carlos.payflowguard.merchant.dto.CreateMerchantRequest;
 import com.carlos.payflowguard.merchant.dto.MerchantResponse;
 import com.carlos.payflowguard.merchant.service.MerchantService;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +25,7 @@ public class MerchantController {
     }
 
     @GetMapping
-    public Page<MerchantResponse> getAllMerchants(Pageable pageable) {
+    public PageResponse<MerchantResponse> getAllMerchants(Pageable pageable) {
         return merchantService.getAllMerchants(pageable);
     }
 

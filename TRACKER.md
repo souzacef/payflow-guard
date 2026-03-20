@@ -95,3 +95,5 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Handle not found on update
 - [x] Add pagination to GET /merchants
 - [x] Use Pageable and Page<T>
+- [x] Customize pagination response
+- [x] Hide internal Spring Page structure

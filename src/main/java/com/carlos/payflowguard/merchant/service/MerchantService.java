@@ -1,6 +1,7 @@
 package com.carlos.payflowguard.merchant.service;
 
 import com.carlos.payflowguard.common.exception.ResourceNotFoundException;
+import com.carlos.payflowguard.common.response.PageResponse;
 import com.carlos.payflowguard.merchant.dto.CreateMerchantRequest;
 import com.carlos.payflowguard.merchant.dto.MerchantResponse;
 import com.carlos.payflowguard.merchant.entity.Merchant;
@@ -34,14 +35,23 @@ public class MerchantService {
         );
     }
 
-    public Page<MerchantResponse> getAllMerchants(Pageable pageable) {
-        return merchantRepository.findAll(pageable)
-                .map(merchant -> new MerchantResponse(
-                        merchant.getId(),
-                        merchant.getBusinessName(),
-                        merchant.getEmail(),
-                        merchant.getStatus()
-                ));
+    public PageResponse<MerchantResponse> getAllMerchants(Pageable pageable) {
+        Page<Merchant> page = merchantRepository.findAll(pageable);
+
+        return new PageResponse<>(
+                page.getContent().stream()
+                        .map(merchant -> new MerchantResponse(
+                                merchant.getId(),
+                                merchant.getBusinessName(),
+                                merchant.getEmail(),
+                                merchant.getStatus()
+                        ))
+                        .toList(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
     }
 
     public MerchantResponse getMerchantById(Long id) {
