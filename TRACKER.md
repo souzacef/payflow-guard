@@ -93,3 +93,5 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Add PUT /api/v1/merchants/{id}
 - [x] Update merchant data in database
 - [x] Handle not found on update
+- [x] Add pagination to GET /merchants
+- [x] Use Pageable and Page<T>

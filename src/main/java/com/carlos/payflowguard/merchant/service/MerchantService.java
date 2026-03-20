@@ -5,10 +5,9 @@ import com.carlos.payflowguard.merchant.dto.CreateMerchantRequest;
 import com.carlos.payflowguard.merchant.dto.MerchantResponse;
 import com.carlos.payflowguard.merchant.entity.Merchant;
 import com.carlos.payflowguard.merchant.repository.MerchantRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class MerchantService {
@@ -17,15 +16,6 @@ public class MerchantService {
 
     public MerchantService(MerchantRepository merchantRepository) {
         this.merchantRepository = merchantRepository;
-    }
-
-    public MerchantResponse getSampleMerchant() {
-        return new MerchantResponse(
-                1L,
-                "Carlos Payments LTDA",
-                "contato@payflowguard.com",
-                "ACTIVE"
-        );
     }
 
     public MerchantResponse createMerchant(CreateMerchantRequest request) {
@@ -44,16 +34,14 @@ public class MerchantService {
         );
     }
 
-    public List<MerchantResponse> getAllMerchants() {
-        return merchantRepository.findAll()
-                .stream()
+    public Page<MerchantResponse> getAllMerchants(Pageable pageable) {
+        return merchantRepository.findAll(pageable)
                 .map(merchant -> new MerchantResponse(
                         merchant.getId(),
                         merchant.getBusinessName(),
                         merchant.getEmail(),
                         merchant.getStatus()
-                ))
-                .collect(Collectors.toList());
+                ));
     }
 
     public MerchantResponse getMerchantById(Long id) {

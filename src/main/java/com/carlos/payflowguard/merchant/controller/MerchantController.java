@@ -4,10 +4,10 @@ import com.carlos.payflowguard.merchant.dto.CreateMerchantRequest;
 import com.carlos.payflowguard.merchant.dto.MerchantResponse;
 import com.carlos.payflowguard.merchant.service.MerchantService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/merchants")
@@ -19,19 +19,14 @@ public class MerchantController {
         this.merchantService = merchantService;
     }
 
-    @GetMapping("/sample")
-    public MerchantResponse getSampleMerchant() {
-        return merchantService.getSampleMerchant();
-    }
-
     @PostMapping
     public MerchantResponse createMerchant(@Valid @RequestBody CreateMerchantRequest request) {
         return merchantService.createMerchant(request);
     }
 
     @GetMapping
-    public List<MerchantResponse> getAllMerchants() {
-        return merchantService.getAllMerchants();
+    public Page<MerchantResponse> getAllMerchants(Pageable pageable) {
+        return merchantService.getAllMerchants(pageable);
     }
 
     @GetMapping("/{id}")
