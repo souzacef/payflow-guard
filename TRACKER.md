@@ -75,3 +75,21 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - APIs usually return JSON
 - Versioned endpoints use paths like /api/v1
 - Security rules can expose specific routes publicly
+
+## Day 2
+
+- [x] POST /api/v1/merchants
+- [x] Validation with @Valid
+- [x] Global exception handler
+- [x] PostgreSQL integration (Docker)
+- [x] JPA entity + repository
+- [x] GET all merchants
+- [x] GET merchant by id
+- [x] 404 handling (ResourceNotFoundException)
+- [x] DELETE merchant
+
+## Day 3
+
+- [x] Add PUT /api/v1/merchants/{id}
+- [x] Update merchant data in database
+- [x] Handle not found on update

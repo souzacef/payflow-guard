@@ -68,6 +68,23 @@ public class MerchantService {
         );
     }
 
+    public MerchantResponse updateMerchant(Long id, CreateMerchantRequest request) {
+        Merchant merchant = merchantRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
+
+        merchant.setBusinessName(request.getBusinessName());
+        merchant.setEmail(request.getEmail());
+
+        Merchant updatedMerchant = merchantRepository.save(merchant);
+
+        return new MerchantResponse(
+                updatedMerchant.getId(),
+                updatedMerchant.getBusinessName(),
+                updatedMerchant.getEmail(),
+                updatedMerchant.getStatus()
+        );
+    }
+
     public void deleteMerchantById(Long id) {
         Merchant merchant = merchantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
