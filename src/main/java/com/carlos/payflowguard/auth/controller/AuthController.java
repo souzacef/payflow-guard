@@ -4,6 +4,7 @@ import com.carlos.payflowguard.auth.dto.AuthRequest;
 import com.carlos.payflowguard.auth.dto.AuthResponse;
 import com.carlos.payflowguard.auth.dto.UserResponse;
 import com.carlos.payflowguard.auth.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,12 +18,12 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public AuthResponse register(@RequestBody AuthRequest request) {
+    public AuthResponse register(@Valid @RequestBody AuthRequest request) {
         return authService.register(request);
     }
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody AuthRequest request) {
+    public AuthResponse login(@Valid @RequestBody AuthRequest request) {
         return authService.login(request);
     }
 

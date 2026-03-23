@@ -122,3 +122,7 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Enforce tenant isolation (user-specific data)
 - [x] Add GET /auth/me endpoint
 - [x] Retrieve authenticated user from SecurityContext
+- [x] Add validation to auth requests
+- [x] Prevent duplicate email registration
+- [x] Return 409 on duplicate email
+- [x] Return 400 on invalid input

@@ -3,6 +3,7 @@ package com.carlos.payflowguard.auth.service;
 import com.carlos.payflowguard.auth.dto.AuthRequest;
 import com.carlos.payflowguard.auth.dto.AuthResponse;
 import com.carlos.payflowguard.auth.dto.UserResponse;
+import com.carlos.payflowguard.common.exception.ConflictException;
 import com.carlos.payflowguard.common.exception.UnauthorizedException;
 import com.carlos.payflowguard.security.JwtService;
 import com.carlos.payflowguard.user.entity.User;
@@ -29,6 +30,10 @@ public class AuthService {
     }
 
     public AuthResponse register(AuthRequest request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new ConflictException("Email already registered");
+        }
+
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
