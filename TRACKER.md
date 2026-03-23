@@ -126,3 +126,6 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Prevent duplicate email registration
 - [x] Return 409 on duplicate email
 - [x] Return 400 on invalid input
+- [x] Add springdoc OpenAPI dependency
+- [x] Add OpenAPI metadata config
+- [x] Expose Swagger UI and api-docs endpoints
