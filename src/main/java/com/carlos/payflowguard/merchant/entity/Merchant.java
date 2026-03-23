@@ -1,9 +1,7 @@
 package com.carlos.payflowguard.merchant.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.carlos.payflowguard.user.entity.User;
+import jakarta.persistence.*;
 
 @Entity
 public class Merchant {
@@ -16,14 +14,19 @@ public class Merchant {
     private String email;
     private String status;
 
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     public Merchant() {
     }
 
-    public Merchant(Long id, String businessName, String email, String status) {
+    public Merchant(Long id, String businessName, String email, String status, User user) {
         this.id = id;
         this.businessName = businessName;
         this.email = email;
         this.status = status;
+        this.user = user;
     }
 
     public Long getId() {
@@ -42,6 +45,10 @@ public class Merchant {
         return status;
     }
 
+    public User getUser() {
+        return user;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -56,5 +63,9 @@ public class Merchant {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

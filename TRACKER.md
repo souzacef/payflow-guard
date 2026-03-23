@@ -116,3 +116,7 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Create UnauthorizedException
 - [x] Handle login errors with 401
 - [x] Return clean error response for invalid credentials
+- [x] Add JWT authentication
+- [x] Protect endpoints with token
+- [x] Associate merchants with users
+- [x] Enforce tenant isolation (user-specific data)
