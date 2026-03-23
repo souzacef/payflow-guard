@@ -129,3 +129,5 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Add springdoc OpenAPI dependency
 - [x] Add OpenAPI metadata config
 - [x] Expose Swagger UI and api-docs endpoints
+- [x] Add Swagger/OpenAPI documentation
+- [x] Add JWT auth support in Swagger UI
