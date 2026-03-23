@@ -113,3 +113,6 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Add BCrypt password hashing
 - [x] Hash password on register
 - [x] Validate hashed password on login
+- [x] Create UnauthorizedException
+- [x] Handle login errors with 401
+- [x] Return clean error response for invalid credentials
