@@ -131,3 +131,11 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Expose Swagger UI and api-docs endpoints
 - [x] Add Swagger/OpenAPI documentation
 - [x] Add JWT auth support in Swagger UI
+- [x] Add createdAt and updatedAt to User
+- [x] Add createdAt and updatedAt to Merchant
+- [x] Reset development database to apply schema changes
+- [x] Verify timestamps in PostgreSQL
+
+## Next
+- Expose timestamps in MerchantResponse and UserResponse
+- Test updated API responses in Swagger

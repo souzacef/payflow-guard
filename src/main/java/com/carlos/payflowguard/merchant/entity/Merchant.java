@@ -2,6 +2,10 @@ package com.carlos.payflowguard.merchant.entity;
 
 import com.carlos.payflowguard.user.entity.User;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.Instant;
 
 @Entity
 public class Merchant {
@@ -17,6 +21,14 @@ public class Merchant {
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private Instant updatedAt;
 
     public Merchant() {
     }
@@ -47,6 +59,14 @@ public class Merchant {
 
     public User getUser() {
         return user;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
     }
 
     public void setId(Long id) {

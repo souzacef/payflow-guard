@@ -1,6 +1,10 @@
 package com.carlos.payflowguard.user.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.Instant;
 
 @Entity
 @Table(name = "users")
@@ -16,6 +20,14 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private Instant updatedAt;
+
     public User() {
     }
 
@@ -29,6 +41,14 @@ public class User {
 
     public String getPassword() {
         return password;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
     }
 
     public void setId(Long id) {
