@@ -109,3 +109,7 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 
 - [x] Use JWT token in Authorization header
 - [x] Access protected endpoints
+- [x] Return 401 without token
+- [x] Add BCrypt password hashing
+- [x] Hash password on register
+- [x] Validate hashed password on login
