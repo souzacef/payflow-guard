@@ -2,6 +2,7 @@ package com.carlos.payflowguard.auth.controller;
 
 import com.carlos.payflowguard.auth.dto.AuthRequest;
 import com.carlos.payflowguard.auth.dto.AuthResponse;
+import com.carlos.payflowguard.auth.dto.UserResponse;
 import com.carlos.payflowguard.auth.service.AuthService;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,5 +24,10 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@RequestBody AuthRequest request) {
         return authService.login(request);
+    }
+
+    @GetMapping("/me")
+    public UserResponse getCurrentUser() {
+        return authService.getCurrentUser();
     }
 }

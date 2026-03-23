@@ -105,7 +105,7 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Implement register/login
 - [x] Generate JWT tokens
 
-## Day 3
+## Day 4
 
 - [x] Use JWT token in Authorization header
 - [x] Access protected endpoints
@@ -120,3 +120,5 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Protect endpoints with token
 - [x] Associate merchants with users
 - [x] Enforce tenant isolation (user-specific data)
+- [x] Add GET /auth/me endpoint
+- [x] Retrieve authenticated user from SecurityContext
