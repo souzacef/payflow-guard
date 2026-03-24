@@ -136,8 +136,10 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Reset development database to apply schema changes
 - [x] Verify timestamps in PostgreSQL
 
-## Day 4
+## Day 5
 
 - [x] Expose timestamps in UserResponse
 - [x] Expose timestamps in MerchantResponse
 - [x] Verify timestamps through API responses
+- [x] Replace Pageable Swagger input with explicit query params
+- [x] Fix merchant listing in Swagger

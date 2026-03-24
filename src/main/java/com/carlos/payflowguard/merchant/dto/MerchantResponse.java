@@ -1,5 +1,7 @@
 package com.carlos.payflowguard.merchant.dto;
 
+import com.carlos.payflowguard.merchant.entity.MerchantStatus;
+
 import java.time.Instant;
 
 public class MerchantResponse {
@@ -7,14 +9,14 @@ public class MerchantResponse {
     private Long id;
     private String businessName;
     private String email;
-    private String status;
+    private MerchantStatus status;
     private Instant createdAt;
     private Instant updatedAt;
 
     public MerchantResponse() {
     }
 
-    public MerchantResponse(Long id, String businessName, String email, String status, Instant createdAt, Instant updatedAt) {
+    public MerchantResponse(Long id, String businessName, String email, MerchantStatus status, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.businessName = businessName;
         this.email = email;
@@ -35,7 +37,7 @@ public class MerchantResponse {
         return email;
     }
 
-    public String getStatus() {
+    public MerchantStatus getStatus() {
         return status;
     }
 
@@ -59,7 +61,7 @@ public class MerchantResponse {
         this.email = email;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(MerchantStatus status) {
         this.status = status;
     }
 

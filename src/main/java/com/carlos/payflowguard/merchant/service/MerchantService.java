@@ -6,11 +6,13 @@ import com.carlos.payflowguard.common.response.PageResponse;
 import com.carlos.payflowguard.merchant.dto.CreateMerchantRequest;
 import com.carlos.payflowguard.merchant.dto.MerchantResponse;
 import com.carlos.payflowguard.merchant.entity.Merchant;
+import com.carlos.payflowguard.merchant.entity.MerchantStatus;
 import com.carlos.payflowguard.merchant.repository.MerchantRepository;
 import com.carlos.payflowguard.user.entity.User;
 import com.carlos.payflowguard.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -36,13 +38,26 @@ public class MerchantService {
                 .orElseThrow(() -> new UnauthorizedException("Unauthorized"));
     }
 
+    private PageRequest buildPageRequest(int page, int size, String sort) {
+        String[] sortParts = sort.split(",");
+
+        String sortField = sortParts[0];
+        Sort.Direction direction = Sort.Direction.ASC;
+
+        if (sortParts.length > 1 && sortParts[1].equalsIgnoreCase("desc")) {
+            direction = Sort.Direction.DESC;
+        }
+
+        return PageRequest.of(page, size, Sort.by(direction, sortField));
+    }
+
     public MerchantResponse createMerchant(CreateMerchantRequest request) {
         User user = getAuthenticatedUser();
 
         Merchant merchant = new Merchant();
         merchant.setBusinessName(request.getBusinessName());
         merchant.setEmail(request.getEmail());
-        merchant.setStatus("ACTIVE");
+        merchant.setStatus(MerchantStatus.ACTIVE);
         merchant.setUser(user);
 
         Merchant savedMerchant = merchantRepository.save(merchant);
@@ -60,21 +75,24 @@ public class MerchantService {
     public PageResponse<MerchantResponse> getAllMerchants(
             String email,
             String businessName,
-            Pageable pageable
+            int page,
+            int size,
+            String sort
     ) {
         User user = getAuthenticatedUser();
-        Page<Merchant> page;
+        PageRequest pageRequest = buildPageRequest(page, size, sort);
+        Page<Merchant> merchantPage;
 
         if (email != null && !email.isBlank()) {
-            page = merchantRepository.findByUserAndEmailContainingIgnoreCase(user, email, pageable);
+            merchantPage = merchantRepository.findByUserAndEmailContainingIgnoreCase(user, email, pageRequest);
         } else if (businessName != null && !businessName.isBlank()) {
-            page = merchantRepository.findByUserAndBusinessNameContainingIgnoreCase(user, businessName, pageable);
+            merchantPage = merchantRepository.findByUserAndBusinessNameContainingIgnoreCase(user, businessName, pageRequest);
         } else {
-            page = merchantRepository.findByUser(user, pageable);
+            merchantPage = merchantRepository.findByUser(user, pageRequest);
         }
 
         return new PageResponse<>(
-                page.getContent().stream()
+                merchantPage.getContent().stream()
                         .map(merchant -> new MerchantResponse(
                                 merchant.getId(),
                                 merchant.getBusinessName(),
@@ -84,10 +102,10 @@ public class MerchantService {
                                 merchant.getUpdatedAt()
                         ))
                         .toList(),
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.getTotalPages()
+                merchantPage.getNumber(),
+                merchantPage.getSize(),
+                merchantPage.getTotalElements(),
+                merchantPage.getTotalPages()
         );
     }
 

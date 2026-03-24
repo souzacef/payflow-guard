@@ -5,7 +5,6 @@ import com.carlos.payflowguard.merchant.dto.CreateMerchantRequest;
 import com.carlos.payflowguard.merchant.dto.MerchantResponse;
 import com.carlos.payflowguard.merchant.service.MerchantService;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,9 +27,11 @@ public class MerchantController {
     public PageResponse<MerchantResponse> getAllMerchants(
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String businessName,
-            Pageable pageable
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id,asc") String sort
     ) {
-        return merchantService.getAllMerchants(email, businessName, pageable);
+        return merchantService.getAllMerchants(email, businessName, page, size, sort);
     }
 
     @GetMapping("/{id}")

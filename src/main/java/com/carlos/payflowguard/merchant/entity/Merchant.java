@@ -16,7 +16,10 @@ public class Merchant {
 
     private String businessName;
     private String email;
-    private String status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MerchantStatus status;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
@@ -33,7 +36,7 @@ public class Merchant {
     public Merchant() {
     }
 
-    public Merchant(Long id, String businessName, String email, String status, User user) {
+    public Merchant(Long id, String businessName, String email, MerchantStatus status, User user) {
         this.id = id;
         this.businessName = businessName;
         this.email = email;
@@ -53,7 +56,7 @@ public class Merchant {
         return email;
     }
 
-    public String getStatus() {
+    public MerchantStatus getStatus() {
         return status;
     }
 
@@ -81,7 +84,7 @@ public class Merchant {
         this.email = email;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(MerchantStatus status) {
         this.status = status;
     }
 
