@@ -4,22 +4,21 @@
 Build a portfolio-ready payment processing backend with fraud analysis using Java and Spring Boot.
 
 ## Milestones
-- [ ] Foundation
-- [ ] Authentication
-- [ ] Merchant and Customer Management
+- [x] Foundation
+- [x] Authentication
+- [x] Merchant Management
 - [ ] Payment Processing
 - [ ] Fraud Analysis
 - [ ] Webhooks and FX
 - [ ] Tests and Documentation
 
 ## Current Focus
-- [x] Check installed tools
-- [x] Create GitHub repository
-- [x] Install Java 21
-- [x] Install Maven
-- [x] Create Spring Boot project
-- [x] Run application locally
-- [x] Create first endpoint
+- [x] Expose timestamps in API responses
+- [x] Fix Swagger pagination parameters
+- [x] Add merchant status update endpoint
+- [x] Improve enum-based error handling
+- [ ] Write README
+- [ ] Add tests
 
 ## Done
 - [x] Repository created
@@ -146,3 +145,4 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Add PATCH /api/v1/merchants/{id}/status
 - [x] Update merchant status using enum
 - [x] Verify ACTIVE/INACTIVE transitions
+- [x] Improve error handling for invalid enum values
