@@ -51,7 +51,9 @@ public class MerchantService {
                 savedMerchant.getId(),
                 savedMerchant.getBusinessName(),
                 savedMerchant.getEmail(),
-                savedMerchant.getStatus()
+                savedMerchant.getStatus(),
+                savedMerchant.getCreatedAt(),
+                savedMerchant.getUpdatedAt()
         );
     }
 
@@ -77,7 +79,9 @@ public class MerchantService {
                                 merchant.getId(),
                                 merchant.getBusinessName(),
                                 merchant.getEmail(),
-                                merchant.getStatus()
+                                merchant.getStatus(),
+                                merchant.getCreatedAt(),
+                                merchant.getUpdatedAt()
                         ))
                         .toList(),
                 page.getNumber(),
@@ -97,7 +101,9 @@ public class MerchantService {
                 merchant.getId(),
                 merchant.getBusinessName(),
                 merchant.getEmail(),
-                merchant.getStatus()
+                merchant.getStatus(),
+                merchant.getCreatedAt(),
+                merchant.getUpdatedAt()
         );
     }
 
@@ -116,7 +122,9 @@ public class MerchantService {
                 updatedMerchant.getId(),
                 updatedMerchant.getBusinessName(),
                 updatedMerchant.getEmail(),
-                updatedMerchant.getStatus()
+                updatedMerchant.getStatus(),
+                updatedMerchant.getCreatedAt(),
+                updatedMerchant.getUpdatedAt()
         );
     }
 

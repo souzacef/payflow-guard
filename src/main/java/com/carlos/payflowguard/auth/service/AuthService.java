@@ -68,6 +68,11 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException("Unauthorized"));
 
-        return new UserResponse(user.getId(), user.getEmail());
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
+        );
     }
 }
