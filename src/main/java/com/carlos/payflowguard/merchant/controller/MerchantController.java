@@ -3,6 +3,7 @@ package com.carlos.payflowguard.merchant.controller;
 import com.carlos.payflowguard.common.response.PageResponse;
 import com.carlos.payflowguard.merchant.dto.CreateMerchantRequest;
 import com.carlos.payflowguard.merchant.dto.MerchantResponse;
+import com.carlos.payflowguard.merchant.dto.UpdateMerchantStatusRequest;
 import com.carlos.payflowguard.merchant.service.MerchantService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +46,14 @@ public class MerchantController {
             @Valid @RequestBody CreateMerchantRequest request
     ) {
         return merchantService.updateMerchant(id, request);
+    }
+
+    @PatchMapping("/{id}/status")
+    public MerchantResponse updateMerchantStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateMerchantStatusRequest request
+    ) {
+        return merchantService.updateMerchantStatus(id, request);
     }
 
     @DeleteMapping("/{id}")

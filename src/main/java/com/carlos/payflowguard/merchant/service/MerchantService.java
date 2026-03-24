@@ -5,6 +5,7 @@ import com.carlos.payflowguard.common.exception.UnauthorizedException;
 import com.carlos.payflowguard.common.response.PageResponse;
 import com.carlos.payflowguard.merchant.dto.CreateMerchantRequest;
 import com.carlos.payflowguard.merchant.dto.MerchantResponse;
+import com.carlos.payflowguard.merchant.dto.UpdateMerchantStatusRequest;
 import com.carlos.payflowguard.merchant.entity.Merchant;
 import com.carlos.payflowguard.merchant.entity.MerchantStatus;
 import com.carlos.payflowguard.merchant.repository.MerchantRepository;
@@ -133,6 +134,26 @@ public class MerchantService {
 
         merchant.setBusinessName(request.getBusinessName());
         merchant.setEmail(request.getEmail());
+
+        Merchant updatedMerchant = merchantRepository.save(merchant);
+
+        return new MerchantResponse(
+                updatedMerchant.getId(),
+                updatedMerchant.getBusinessName(),
+                updatedMerchant.getEmail(),
+                updatedMerchant.getStatus(),
+                updatedMerchant.getCreatedAt(),
+                updatedMerchant.getUpdatedAt()
+        );
+    }
+
+    public MerchantResponse updateMerchantStatus(Long id, UpdateMerchantStatusRequest request) {
+        User user = getAuthenticatedUser();
+
+        Merchant merchant = merchantRepository.findByIdAndUser(id, user)
+                .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
+
+        merchant.setStatus(request.getStatus());
 
         Merchant updatedMerchant = merchantRepository.save(merchant);
 

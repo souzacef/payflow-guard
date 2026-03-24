@@ -143,3 +143,6 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Verify timestamps through API responses
 - [x] Replace Pageable Swagger input with explicit query params
 - [x] Fix merchant listing in Swagger
+- [x] Add PATCH /api/v1/merchants/{id}/status
+- [x] Update merchant status using enum
+- [x] Verify ACTIVE/INACTIVE transitions
