@@ -28,6 +28,8 @@ It focuses on:
 * Secure login and registration
 * Protected endpoints with token validation
 * Multi-tenant data isolation (users only access their own data)
+* Role-based access control (USER / ADMIN)
+
 
 ### 🏪 Merchant Management
 

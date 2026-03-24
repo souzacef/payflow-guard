@@ -9,6 +9,7 @@ import com.carlos.payflowguard.merchant.dto.UpdateMerchantStatusRequest;
 import com.carlos.payflowguard.merchant.entity.Merchant;
 import com.carlos.payflowguard.merchant.entity.MerchantStatus;
 import com.carlos.payflowguard.merchant.repository.MerchantRepository;
+import com.carlos.payflowguard.user.entity.Role;
 import com.carlos.payflowguard.user.entity.User;
 import com.carlos.payflowguard.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -84,12 +85,24 @@ public class MerchantService {
         PageRequest pageRequest = buildPageRequest(page, size, sort);
         Page<Merchant> merchantPage;
 
-        if (email != null && !email.isBlank()) {
-            merchantPage = merchantRepository.findByUserAndEmailContainingIgnoreCase(user, email, pageRequest);
-        } else if (businessName != null && !businessName.isBlank()) {
-            merchantPage = merchantRepository.findByUserAndBusinessNameContainingIgnoreCase(user, businessName, pageRequest);
+        boolean isAdmin = user.getRole() == Role.ADMIN;
+
+        if (isAdmin) {
+            if (email != null && !email.isBlank()) {
+                merchantPage = merchantRepository.findByEmailContainingIgnoreCase(email, pageRequest);
+            } else if (businessName != null && !businessName.isBlank()) {
+                merchantPage = merchantRepository.findByBusinessNameContainingIgnoreCase(businessName, pageRequest);
+            } else {
+                merchantPage = merchantRepository.findAll(pageRequest);
+            }
         } else {
-            merchantPage = merchantRepository.findByUser(user, pageRequest);
+            if (email != null && !email.isBlank()) {
+                merchantPage = merchantRepository.findByUserAndEmailContainingIgnoreCase(user, email, pageRequest);
+            } else if (businessName != null && !businessName.isBlank()) {
+                merchantPage = merchantRepository.findByUserAndBusinessNameContainingIgnoreCase(user, businessName, pageRequest);
+            } else {
+                merchantPage = merchantRepository.findByUser(user, pageRequest);
+            }
         }
 
         return new PageResponse<>(
@@ -112,9 +125,15 @@ public class MerchantService {
 
     public MerchantResponse getMerchantById(Long id) {
         User user = getAuthenticatedUser();
+        Merchant merchant;
 
-        Merchant merchant = merchantRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
+        if (user.getRole() == Role.ADMIN) {
+            merchant = merchantRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
+        } else {
+            merchant = merchantRepository.findByIdAndUser(id, user)
+                    .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
+        }
 
         return new MerchantResponse(
                 merchant.getId(),
@@ -128,9 +147,15 @@ public class MerchantService {
 
     public MerchantResponse updateMerchant(Long id, CreateMerchantRequest request) {
         User user = getAuthenticatedUser();
+        Merchant merchant;
 
-        Merchant merchant = merchantRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
+        if (user.getRole() == Role.ADMIN) {
+            merchant = merchantRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
+        } else {
+            merchant = merchantRepository.findByIdAndUser(id, user)
+                    .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
+        }
 
         merchant.setBusinessName(request.getBusinessName());
         merchant.setEmail(request.getEmail());
@@ -149,9 +174,15 @@ public class MerchantService {
 
     public MerchantResponse updateMerchantStatus(Long id, UpdateMerchantStatusRequest request) {
         User user = getAuthenticatedUser();
+        Merchant merchant;
 
-        Merchant merchant = merchantRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
+        if (user.getRole() == Role.ADMIN) {
+            merchant = merchantRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
+        } else {
+            merchant = merchantRepository.findByIdAndUser(id, user)
+                    .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
+        }
 
         merchant.setStatus(request.getStatus());
 
@@ -169,9 +200,15 @@ public class MerchantService {
 
     public void deleteMerchantById(Long id) {
         User user = getAuthenticatedUser();
+        Merchant merchant;
 
-        Merchant merchant = merchantRepository.findByIdAndUser(id, user)
-                .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
+        if (user.getRole() == Role.ADMIN) {
+            merchant = merchantRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
+        } else {
+            merchant = merchantRepository.findByIdAndUser(id, user)
+                    .orElseThrow(() -> new ResourceNotFoundException("Merchant not found with id: " + id));
+        }
 
         merchantRepository.delete(merchant);
     }

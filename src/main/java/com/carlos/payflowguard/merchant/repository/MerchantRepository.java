@@ -17,4 +17,8 @@ public interface MerchantRepository extends JpaRepository<Merchant, Long> {
     Page<Merchant> findByUserAndBusinessNameContainingIgnoreCase(User user, String businessName, Pageable pageable);
 
     Optional<Merchant> findByIdAndUser(Long id, User user);
+
+    Page<Merchant> findByEmailContainingIgnoreCase(String email, Pageable pageable);
+
+    Page<Merchant> findByBusinessNameContainingIgnoreCase(String businessName, Pageable pageable);
 }

@@ -17,7 +17,7 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Fix Swagger pagination parameters
 - [x] Add merchant status update endpoint
 - [x] Improve enum-based error handling
-- [ ] Write README
+- [x] Write README
 - [ ] Add tests
 
 ## Done
@@ -146,3 +146,14 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Update merchant status using enum
 - [x] Verify ACTIVE/INACTIVE transitions
 - [x] Improve error handling for invalid enum values
+- [x] Create professional README
+- [x] Add Swagger screenshots
+- [x] Prepare project for portfolio presentation
+- [x] Implement role-based access control (USER / ADMIN)
+- [x] Restrict user access to own merchants
+- [x] Allow admin access to all merchants
+
+## Next
+- Retest acess control
+- Add ADMIN-only endpoints
+- Start Payment Processing module

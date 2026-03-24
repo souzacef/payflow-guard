@@ -20,6 +20,10 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -43,6 +47,10 @@ public class User {
         return password;
     }
 
+    public Role getRole() {
+        return role;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -61,5 +69,9 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }

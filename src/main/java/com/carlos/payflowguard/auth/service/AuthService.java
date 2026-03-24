@@ -6,6 +6,7 @@ import com.carlos.payflowguard.auth.dto.UserResponse;
 import com.carlos.payflowguard.common.exception.ConflictException;
 import com.carlos.payflowguard.common.exception.UnauthorizedException;
 import com.carlos.payflowguard.security.JwtService;
+import com.carlos.payflowguard.user.entity.Role;
 import com.carlos.payflowguard.user.entity.User;
 import com.carlos.payflowguard.user.repository.UserRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -37,6 +38,7 @@ public class AuthService {
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.USER);
 
         userRepository.save(user);
 
@@ -71,6 +73,7 @@ public class AuthService {
         return new UserResponse(
                 user.getId(),
                 user.getEmail(),
+                user.getRole(),
                 user.getCreatedAt(),
                 user.getUpdatedAt()
         );
