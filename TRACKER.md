@@ -166,3 +166,9 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Add payment status update endpoint
 - [x] Enforce payment status transitions
 - [x] Restrict payment status changes to ADMIN
+- [x] Payment lifecycle (PENDING → APPROVED/FAILED)
+- [x] Enforce immutable status after processing
+- [x] Add fraud rule engine foundation
+- [x] Reject payments above threshold
+- [x] Reject excessive recent payment attempts
+- [x] Store fraud reason on failed payments

@@ -13,6 +13,7 @@ public class PaymentResponse {
     private String currency;
     private String description;
     private PaymentStatus status;
+    private String fraudReason;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -24,6 +25,7 @@ public class PaymentResponse {
             String currency,
             String description,
             PaymentStatus status,
+            String fraudReason,
             Instant createdAt,
             Instant updatedAt
     ) {
@@ -34,6 +36,7 @@ public class PaymentResponse {
         this.currency = currency;
         this.description = description;
         this.status = status;
+        this.fraudReason = fraudReason;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -64,6 +67,10 @@ public class PaymentResponse {
 
     public PaymentStatus getStatus() {
         return status;
+    }
+
+    public String getFraudReason() {
+        return fraudReason;
     }
 
     public Instant getCreatedAt() {

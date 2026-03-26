@@ -27,15 +27,18 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final MerchantRepository merchantRepository;
     private final UserRepository userRepository;
+    private final FraudCheckService fraudCheckService;
 
     public PaymentService(
             PaymentRepository paymentRepository,
             MerchantRepository merchantRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            FraudCheckService fraudCheckService
     ) {
         this.paymentRepository = paymentRepository;
         this.merchantRepository = merchantRepository;
         this.userRepository = userRepository;
+        this.fraudCheckService = fraudCheckService;
     }
 
     private User getAuthenticatedUser() {
@@ -71,6 +74,7 @@ public class PaymentService {
                 payment.getCurrency(),
                 payment.getDescription(),
                 payment.getStatus(),
+                payment.getFraudReason(),
                 payment.getCreatedAt(),
                 payment.getUpdatedAt()
         );
@@ -96,12 +100,21 @@ public class PaymentService {
             throw new IllegalArgumentException("Cannot create payment for inactive merchant");
         }
 
+        FraudCheckResult fraudCheckResult = fraudCheckService.evaluate(merchant, request.getAmountMinor());
+
         Payment payment = new Payment();
         payment.setMerchant(merchant);
         payment.setAmountMinor(request.getAmountMinor());
         payment.setCurrency(request.getCurrency().toUpperCase());
         payment.setDescription(request.getDescription());
-        payment.setStatus(PaymentStatus.PENDING);
+
+        if (fraudCheckResult.isPassed()) {
+            payment.setStatus(PaymentStatus.PENDING);
+            payment.setFraudReason(null);
+        } else {
+            payment.setStatus(PaymentStatus.FAILED);
+            payment.setFraudReason(fraudCheckResult.getReason());
+        }
 
         Payment savedPayment = paymentRepository.save(payment);
 

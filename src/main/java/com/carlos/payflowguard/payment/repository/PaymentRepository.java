@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.Instant;
+
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     Page<Payment> findByMerchantUser(User user, Pageable pageable);
@@ -27,4 +29,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Page<Payment> findByStatus(PaymentStatus status, Pageable pageable);
 
     Page<Payment> findByMerchantIdAndStatus(Long merchantId, PaymentStatus status, Pageable pageable);
+
+    long countByMerchantIdAndCreatedAtAfter(Long merchantId, Instant createdAt);
 }

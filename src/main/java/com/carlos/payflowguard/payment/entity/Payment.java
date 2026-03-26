@@ -30,6 +30,8 @@ public class Payment {
     @Column(nullable = false)
     private PaymentStatus status;
 
+    private String fraudReason;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -65,6 +67,10 @@ public class Payment {
         return status;
     }
 
+    public String getFraudReason() {
+        return fraudReason;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -95,5 +101,9 @@ public class Payment {
 
     public void setStatus(PaymentStatus status) {
         this.status = status;
+    }
+
+    public void setFraudReason(String fraudReason) {
+        this.fraudReason = fraudReason;
     }
 }
