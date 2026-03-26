@@ -8,6 +8,7 @@ import com.carlos.payflowguard.merchant.entity.MerchantStatus;
 import com.carlos.payflowguard.merchant.repository.MerchantRepository;
 import com.carlos.payflowguard.payment.dto.CreatePaymentRequest;
 import com.carlos.payflowguard.payment.dto.PaymentResponse;
+import com.carlos.payflowguard.payment.dto.UpdatePaymentStatusRequest;
 import com.carlos.payflowguard.payment.entity.Payment;
 import com.carlos.payflowguard.payment.entity.PaymentStatus;
 import com.carlos.payflowguard.payment.repository.PaymentRepository;
@@ -161,5 +162,30 @@ public class PaymentService {
         }
 
         return toResponse(payment);
+    }
+
+    public PaymentResponse updatePaymentStatus(Long id, UpdatePaymentStatusRequest request) {
+        User user = getAuthenticatedUser();
+
+        if (user.getRole() != Role.ADMIN) {
+            throw new UnauthorizedException("Unauthorized");
+        }
+
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + id));
+
+        if (payment.getStatus() != PaymentStatus.PENDING) {
+            throw new IllegalArgumentException("Only pending payments can be updated");
+        }
+
+        if (request.getStatus() == PaymentStatus.PENDING) {
+            throw new IllegalArgumentException("Invalid payment status transition");
+        }
+
+        payment.setStatus(request.getStatus());
+
+        Payment updatedPayment = paymentRepository.save(payment);
+
+        return toResponse(updatedPayment);
     }
 }

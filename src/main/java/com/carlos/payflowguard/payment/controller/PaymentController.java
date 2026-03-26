@@ -3,6 +3,7 @@ package com.carlos.payflowguard.payment.controller;
 import com.carlos.payflowguard.common.response.PageResponse;
 import com.carlos.payflowguard.payment.dto.CreatePaymentRequest;
 import com.carlos.payflowguard.payment.dto.PaymentResponse;
+import com.carlos.payflowguard.payment.dto.UpdatePaymentStatusRequest;
 import com.carlos.payflowguard.payment.entity.PaymentStatus;
 import com.carlos.payflowguard.payment.service.PaymentService;
 import jakarta.validation.Valid;
@@ -37,5 +38,13 @@ public class PaymentController {
     @GetMapping("/{id}")
     public PaymentResponse getPaymentById(@PathVariable Long id) {
         return paymentService.getPaymentById(id);
+    }
+
+    @PatchMapping("/{id}/status")
+    public PaymentResponse updatePaymentStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdatePaymentStatusRequest request
+    ) {
+        return paymentService.updatePaymentStatus(id, request);
     }
 }

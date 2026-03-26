@@ -163,3 +163,6 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Implement payment creation
 - [x] Implement payment listing and retrieval
 - [x] Restrict payment access by merchant ownership
+- [x] Add payment status update endpoint
+- [x] Enforce payment status transitions
+- [x] Restrict payment status changes to ADMIN
