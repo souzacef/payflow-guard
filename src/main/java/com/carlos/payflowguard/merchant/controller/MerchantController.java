@@ -6,7 +6,7 @@ import com.carlos.payflowguard.merchant.dto.MerchantResponse;
 import com.carlos.payflowguard.merchant.dto.UpdateMerchantStatusRequest;
 import com.carlos.payflowguard.merchant.service.MerchantService;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,17 +19,12 @@ public class MerchantController {
         this.merchantService = merchantService;
     }
 
-    @PostMapping
-    public MerchantResponse createMerchant(@Valid @RequestBody CreateMerchantRequest request) {
-        return merchantService.createMerchant(request);
-    }
-
     @GetMapping
     public PageResponse<MerchantResponse> getAllMerchants(
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String businessName,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id,asc") String sort
     ) {
         return merchantService.getAllMerchants(email, businessName, page, size, sort);
@@ -40,6 +35,11 @@ public class MerchantController {
         return merchantService.getMerchantById(id);
     }
 
+    @PostMapping
+    public MerchantResponse createMerchant(@Valid @RequestBody CreateMerchantRequest request) {
+        return merchantService.createMerchant(request);
+    }
+
     @PutMapping("/{id}")
     public MerchantResponse updateMerchant(
             @PathVariable Long id,
@@ -48,6 +48,8 @@ public class MerchantController {
         return merchantService.updateMerchant(id, request);
     }
 
+    
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/status")
     public MerchantResponse updateMerchantStatus(
             @PathVariable Long id,
@@ -56,9 +58,10 @@ public class MerchantController {
         return merchantService.updateMerchantStatus(id, request);
     }
 
+    
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMerchantById(@PathVariable Long id) {
+    public void deleteMerchant(@PathVariable Long id) {
         merchantService.deleteMerchantById(id);
-        return ResponseEntity.noContent().build();
     }
 }

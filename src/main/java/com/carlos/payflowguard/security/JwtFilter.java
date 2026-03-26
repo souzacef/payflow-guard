@@ -1,5 +1,7 @@
 package com.carlos.payflowguard.security;
 
+import com.carlos.payflowguard.user.entity.User;
+import com.carlos.payflowguard.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,9 +18,11 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UserRepository userRepository;
 
-    public JwtFilter(JwtService jwtService) {
+    public JwtFilter(JwtService jwtService, UserRepository userRepository) {
         this.jwtService = jwtService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -40,11 +44,18 @@ public class JwtFilter extends OncePerRequestFilter {
 
             String email = jwtService.extractEmail(token);
 
+            User user = userRepository.findByEmail(email).orElse(null);
+
+            if (user == null) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                return;
+            }
+
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             email,
                             null,
-                            AuthorityUtils.NO_AUTHORITIES
+                            AuthorityUtils.createAuthorityList("ROLE_" + user.getRole().name())
                     );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);

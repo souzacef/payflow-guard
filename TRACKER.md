@@ -153,7 +153,8 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Restrict user access to own merchants
 - [x] Allow admin access to all merchants
 
-## Next
-- Retest acess control
-- Add ADMIN-only endpoints
-- Start Payment Processing module
+## Day 6
+
+- [x] Implement role-based access control (ADMIN vs USER)
+- [x] Restrict sensitive endpoints to ADMIN only
+- [x] Validate RBAC behavior via Postman (403 vs 200)
