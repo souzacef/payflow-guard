@@ -185,3 +185,7 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Add admin override endpoint for payment status
 - [x] Require reason for override operations
 - [x] Distinguish normal status transition from admin override
+- [x] Add webhook event entity and repository
+- [x] Emit payment status updated events
+- [x] Persist webhook payloads for future integrations
+- [x] Emit events for both normal updates and admin overrides

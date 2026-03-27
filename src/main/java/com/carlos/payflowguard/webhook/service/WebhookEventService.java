@@ -1,0 +1,70 @@
+package com.carlos.payflowguard.webhook.service;
+
+import com.carlos.payflowguard.payment.entity.Payment;
+import com.carlos.payflowguard.payment.entity.PaymentStatus;
+import com.carlos.payflowguard.webhook.entity.WebhookEvent;
+import com.carlos.payflowguard.webhook.repository.WebhookEventRepository;
+import org.springframework.stereotype.Service;
+
+@Service
+public class WebhookEventService {
+
+    private final WebhookEventRepository webhookEventRepository;
+
+    public WebhookEventService(WebhookEventRepository webhookEventRepository) {
+        this.webhookEventRepository = webhookEventRepository;
+    }
+
+    public void publishPaymentStatusUpdated(
+            Payment payment,
+            PaymentStatus oldStatus,
+            PaymentStatus newStatus,
+            String reason
+    ) {
+        String payload = buildPaymentStatusPayload(payment, oldStatus, newStatus, reason);
+
+        WebhookEvent event = new WebhookEvent();
+        event.setEventType("payment.status.updated");
+        event.setEntityName("Payment");
+        event.setEntityId(payment.getId());
+        event.setPayload(payload);
+
+        webhookEventRepository.save(event);
+    }
+
+    private String buildPaymentStatusPayload(
+            Payment payment,
+            PaymentStatus oldStatus,
+            PaymentStatus newStatus,
+            String reason
+    ) {
+        String safeReason = reason == null ? "" : escapeJson(reason);
+        String fraudReason = payment.getFraudReason() == null ? "" : escapeJson(payment.getFraudReason());
+
+        return """
+                {
+                  "paymentId": %d,
+                  "merchantId": %d,
+                  "oldStatus": "%s",
+                  "newStatus": "%s",
+                  "amountMinor": %d,
+                  "currency": "%s",
+                  "reason": "%s",
+                  "fraudReason": "%s"
+                }
+                """.formatted(
+                payment.getId(),
+                payment.getMerchant().getId(),
+                oldStatus.name(),
+                newStatus.name(),
+                payment.getAmountMinor(),
+                escapeJson(payment.getCurrency()),
+                safeReason,
+                fraudReason
+        );
+    }
+
+    private String escapeJson(String value) {
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+}

@@ -17,6 +17,7 @@ import com.carlos.payflowguard.payment.repository.PaymentRepository;
 import com.carlos.payflowguard.user.entity.Role;
 import com.carlos.payflowguard.user.entity.User;
 import com.carlos.payflowguard.user.repository.UserRepository;
+import com.carlos.payflowguard.webhook.service.WebhookEventService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -31,19 +32,22 @@ public class PaymentService {
     private final UserRepository userRepository;
     private final FraudCheckService fraudCheckService;
     private final AuditLogService auditLogService;
+    private final WebhookEventService webhookEventService;
 
     public PaymentService(
             PaymentRepository paymentRepository,
             MerchantRepository merchantRepository,
             UserRepository userRepository,
             FraudCheckService fraudCheckService,
-            AuditLogService auditLogService
+            AuditLogService auditLogService,
+            WebhookEventService webhookEventService
     ) {
         this.paymentRepository = paymentRepository;
         this.merchantRepository = merchantRepository;
         this.userRepository = userRepository;
         this.fraudCheckService = fraudCheckService;
         this.auditLogService = auditLogService;
+        this.webhookEventService = webhookEventService;
     }
 
     private User getAuthenticatedUser() {
@@ -201,7 +205,6 @@ public class PaymentService {
         }
 
         PaymentStatus oldStatus = payment.getStatus();
-
         payment.setStatus(request.getStatus());
 
         Payment updatedPayment = paymentRepository.save(payment);
@@ -213,6 +216,13 @@ public class PaymentService {
                 user.getEmail(),
                 "Changed from " + oldStatus + " to " + request.getStatus() +
                         (request.getReason() != null ? " | Reason: " + request.getReason() : "")
+        );
+
+        webhookEventService.publishPaymentStatusUpdated(
+                updatedPayment,
+                oldStatus,
+                updatedPayment.getStatus(),
+                request.getReason()
         );
 
         return toResponse(updatedPayment);
@@ -229,7 +239,6 @@ public class PaymentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + id));
 
         PaymentStatus oldStatus = payment.getStatus();
-
         payment.setStatus(request.getStatus());
 
         Payment updatedPayment = paymentRepository.save(payment);
@@ -241,6 +250,13 @@ public class PaymentService {
                 user.getEmail(),
                 "Overridden from " + oldStatus + " to " + request.getStatus() +
                         " | Reason: " + request.getReason()
+        );
+
+        webhookEventService.publishPaymentStatusUpdated(
+                updatedPayment,
+                oldStatus,
+                updatedPayment.getStatus(),
+                request.getReason()
         );
 
         return toResponse(updatedPayment);
