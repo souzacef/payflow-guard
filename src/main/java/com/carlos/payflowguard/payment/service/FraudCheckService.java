@@ -1,34 +1,27 @@
 package com.carlos.payflowguard.payment.service;
 
 import com.carlos.payflowguard.merchant.entity.Merchant;
-import com.carlos.payflowguard.payment.repository.PaymentRepository;
+import com.carlos.payflowguard.payment.fraud.FraudRule;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 public class FraudCheckService {
 
-    private final PaymentRepository paymentRepository;
+    private final List<FraudRule> fraudRules;
 
-    public FraudCheckService(PaymentRepository paymentRepository) {
-        this.paymentRepository = paymentRepository;
+    public FraudCheckService(List<FraudRule> fraudRules) {
+        this.fraudRules = fraudRules;
     }
 
     public FraudCheckResult evaluate(Merchant merchant, Long amountMinor) {
-        if (amountMinor > 100000L) {
-            return FraudCheckResult.failed("Amount exceeds allowed threshold");
-        }
+        for (FraudRule fraudRule : fraudRules) {
+            FraudCheckResult result = fraudRule.evaluate(merchant, amountMinor);
 
-        Instant fiveMinutesAgo = Instant.now().minus(5, ChronoUnit.MINUTES);
-        long recentPayments = paymentRepository.countByMerchantIdAndCreatedAtAfter(
-                merchant.getId(),
-                fiveMinutesAgo
-        );
-
-        if (recentPayments >= 3) {
-            return FraudCheckResult.failed("Too many recent payment attempts for this merchant");
+            if (!result.isPassed()) {
+                return result;
+            }
         }
 
         return FraudCheckResult.passed();

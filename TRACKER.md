@@ -172,3 +172,10 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Reject payments above threshold
 - [x] Reject excessive recent payment attempts
 - [x] Store fraud reason on failed payments
+
+## Day 7
+
+- [x] Refactor fraud checks into modular rule engine
+- [x] Extract amount threshold rule
+- [x] Extract velocity rule
+- [x] Keep payment creation integrated with fraud engine

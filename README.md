@@ -38,6 +38,17 @@ It focuses on:
 * Merchant status management (ACTIVE / INACTIVE)
 * User-scoped data access
 
+
+### 💳 Payments & Fraud Checks
+- Create payments linked to merchants
+- Automatic fraud validation on creation
+- Status lifecycle: PENDING → APPROVED / FAILED
+- Fraud rules:
+  - High-value transactions blocked
+  - Rapid repeated transactions blocked
+- Fraud reason stored and returned in API
+
+
 ### 📊 API Design
 
 * RESTful endpoints (`/api/v1/...`)
