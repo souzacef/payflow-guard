@@ -1,5 +1,6 @@
 package com.carlos.payflowguard.payment.service;
 
+import com.carlos.payflowguard.audit.service.AuditLogService;
 import com.carlos.payflowguard.common.exception.ResourceNotFoundException;
 import com.carlos.payflowguard.common.exception.UnauthorizedException;
 import com.carlos.payflowguard.common.response.PageResponse;
@@ -7,6 +8,7 @@ import com.carlos.payflowguard.merchant.entity.Merchant;
 import com.carlos.payflowguard.merchant.entity.MerchantStatus;
 import com.carlos.payflowguard.merchant.repository.MerchantRepository;
 import com.carlos.payflowguard.payment.dto.CreatePaymentRequest;
+import com.carlos.payflowguard.payment.dto.OverridePaymentStatusRequest;
 import com.carlos.payflowguard.payment.dto.PaymentResponse;
 import com.carlos.payflowguard.payment.dto.UpdatePaymentStatusRequest;
 import com.carlos.payflowguard.payment.entity.Payment;
@@ -28,17 +30,20 @@ public class PaymentService {
     private final MerchantRepository merchantRepository;
     private final UserRepository userRepository;
     private final FraudCheckService fraudCheckService;
+    private final AuditLogService auditLogService;
 
     public PaymentService(
             PaymentRepository paymentRepository,
             MerchantRepository merchantRepository,
             UserRepository userRepository,
-            FraudCheckService fraudCheckService
+            FraudCheckService fraudCheckService,
+            AuditLogService auditLogService
     ) {
         this.paymentRepository = paymentRepository;
         this.merchantRepository = merchantRepository;
         this.userRepository = userRepository;
         this.fraudCheckService = fraudCheckService;
+        this.auditLogService = auditLogService;
     }
 
     private User getAuthenticatedUser() {
@@ -195,9 +200,48 @@ public class PaymentService {
             throw new IllegalArgumentException("Invalid payment status transition");
         }
 
+        PaymentStatus oldStatus = payment.getStatus();
+
         payment.setStatus(request.getStatus());
 
         Payment updatedPayment = paymentRepository.save(payment);
+
+        auditLogService.log(
+                "PAYMENT_STATUS_UPDATED",
+                "Payment",
+                payment.getId(),
+                user.getEmail(),
+                "Changed from " + oldStatus + " to " + request.getStatus() +
+                        (request.getReason() != null ? " | Reason: " + request.getReason() : "")
+        );
+
+        return toResponse(updatedPayment);
+    }
+
+    public PaymentResponse overridePaymentStatus(Long id, OverridePaymentStatusRequest request) {
+        User user = getAuthenticatedUser();
+
+        if (user.getRole() != Role.ADMIN) {
+            throw new UnauthorizedException("Unauthorized");
+        }
+
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + id));
+
+        PaymentStatus oldStatus = payment.getStatus();
+
+        payment.setStatus(request.getStatus());
+
+        Payment updatedPayment = paymentRepository.save(payment);
+
+        auditLogService.log(
+                "PAYMENT_STATUS_OVERRIDDEN",
+                "Payment",
+                payment.getId(),
+                user.getEmail(),
+                "Overridden from " + oldStatus + " to " + request.getStatus() +
+                        " | Reason: " + request.getReason()
+        );
 
         return toResponse(updatedPayment);
     }

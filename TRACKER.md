@@ -7,7 +7,7 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Foundation
 - [x] Authentication
 - [x] Merchant Management
-- [ ] Payment Processing
+- [x] Payment Processing
 - [ ] Fraud Analysis
 - [ ] Webhooks and FX
 - [ ] Tests and Documentation
@@ -179,3 +179,9 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Extract amount threshold rule
 - [x] Extract velocity rule
 - [x] Keep payment creation integrated with fraud engine
+- [x] Add audit log entity and repository
+- [x] Implement audit logging service
+- [x] Log admin payment status updates
+- [x] Add admin override endpoint for payment status
+- [x] Require reason for override operations
+- [x] Distinguish normal status transition from admin override

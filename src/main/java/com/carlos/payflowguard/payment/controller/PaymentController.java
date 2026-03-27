@@ -2,6 +2,7 @@ package com.carlos.payflowguard.payment.controller;
 
 import com.carlos.payflowguard.common.response.PageResponse;
 import com.carlos.payflowguard.payment.dto.CreatePaymentRequest;
+import com.carlos.payflowguard.payment.dto.OverridePaymentStatusRequest;
 import com.carlos.payflowguard.payment.dto.PaymentResponse;
 import com.carlos.payflowguard.payment.dto.UpdatePaymentStatusRequest;
 import com.carlos.payflowguard.payment.entity.PaymentStatus;
@@ -46,5 +47,13 @@ public class PaymentController {
             @Valid @RequestBody UpdatePaymentStatusRequest request
     ) {
         return paymentService.updatePaymentStatus(id, request);
+    }
+
+    @PatchMapping("/{id}/override-status")
+    public PaymentResponse overridePaymentStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody OverridePaymentStatusRequest request
+    ) {
+        return paymentService.overridePaymentStatus(id, request);
     }
 }
