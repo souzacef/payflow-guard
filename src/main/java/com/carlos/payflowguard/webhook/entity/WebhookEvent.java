@@ -12,64 +12,46 @@ public class WebhookEvent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String eventType;
 
-    @Column(nullable = false)
     private String entityName;
 
-    @Column(nullable = false)
     private Long entityId;
 
     @Lob
-    @Column(nullable = false)
     private String payload;
 
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private WebhookEventStatus status;
+
+    private int attemptCount;
+
+    private Instant lastAttemptAt;
+
     private Instant createdAt;
 
     @PrePersist
     public void prePersist() {
         this.createdAt = Instant.now();
+        this.status = WebhookEventStatus.PENDING;
+        this.attemptCount = 0;
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public String getEventType() { return eventType; }
+    public String getEntityName() { return entityName; }
+    public Long getEntityId() { return entityId; }
+    public String getPayload() { return payload; }
+    public WebhookEventStatus getStatus() { return status; }
+    public int getAttemptCount() { return attemptCount; }
+    public Instant getLastAttemptAt() { return lastAttemptAt; }
+    public Instant getCreatedAt() { return createdAt; }
 
-    public String getEventType() {
-        return eventType;
-    }
-
-    public String getEntityName() {
-        return entityName;
-    }
-
-    public Long getEntityId() {
-        return entityId;
-    }
-
-    public String getPayload() {
-        return payload;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setEventType(String eventType) {
-        this.eventType = eventType;
-    }
-
-    public void setEntityName(String entityName) {
-        this.entityName = entityName;
-    }
-
-    public void setEntityId(Long entityId) {
-        this.entityId = entityId;
-    }
-
-    public void setPayload(String payload) {
-        this.payload = payload;
-    }
+    public void setEventType(String eventType) { this.eventType = eventType; }
+    public void setEntityName(String entityName) { this.entityName = entityName; }
+    public void setEntityId(Long entityId) { this.entityId = entityId; }
+    public void setPayload(String payload) { this.payload = payload; }
+    public void setStatus(WebhookEventStatus status) { this.status = status; }
+    public void setAttemptCount(int attemptCount) { this.attemptCount = attemptCount; }
+    public void setLastAttemptAt(Instant lastAttemptAt) { this.lastAttemptAt = lastAttemptAt; }
 }

@@ -1,5 +1,7 @@
 package com.carlos.payflowguard.webhook.dto;
 
+import com.carlos.payflowguard.webhook.entity.WebhookEventStatus;
+
 import java.time.Instant;
 
 public class WebhookEventResponse {
@@ -9,6 +11,9 @@ public class WebhookEventResponse {
     private String entityName;
     private Long entityId;
     private String payload;
+    private WebhookEventStatus status;
+    private int attemptCount;
+    private Instant lastAttemptAt;
     private Instant createdAt;
 
     public WebhookEventResponse(
@@ -17,6 +22,9 @@ public class WebhookEventResponse {
             String entityName,
             Long entityId,
             String payload,
+            WebhookEventStatus status,
+            int attemptCount,
+            Instant lastAttemptAt,
             Instant createdAt
     ) {
         this.id = id;
@@ -24,30 +32,19 @@ public class WebhookEventResponse {
         this.entityName = entityName;
         this.entityId = entityId;
         this.payload = payload;
+        this.status = status;
+        this.attemptCount = attemptCount;
+        this.lastAttemptAt = lastAttemptAt;
         this.createdAt = createdAt;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getEventType() {
-        return eventType;
-    }
-
-    public String getEntityName() {
-        return entityName;
-    }
-
-    public Long getEntityId() {
-        return entityId;
-    }
-
-    public String getPayload() {
-        return payload;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
+    public Long getId() { return id; }
+    public String getEventType() { return eventType; }
+    public String getEntityName() { return entityName; }
+    public Long getEntityId() { return entityId; }
+    public String getPayload() { return payload; }
+    public WebhookEventStatus getStatus() { return status; }
+    public int getAttemptCount() { return attemptCount; }
+    public Instant getLastAttemptAt() { return lastAttemptAt; }
+    public Instant getCreatedAt() { return createdAt; }
 }

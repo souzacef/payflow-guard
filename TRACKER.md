@@ -192,3 +192,7 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Add webhook event inspection endpoints
 - [x] Restrict webhook event access to ADMIN
 - [x] Expose persisted webhook payloads through API
+- [x] Add webhook delivery status tracking
+- [x] Track attempt count and last attempt timestamp
+- [x] Simulate webhook delivery success/failure
+- [x] Expose webhook events via admin API

@@ -6,11 +6,14 @@ import com.carlos.payflowguard.payment.entity.Payment;
 import com.carlos.payflowguard.payment.entity.PaymentStatus;
 import com.carlos.payflowguard.webhook.dto.WebhookEventResponse;
 import com.carlos.payflowguard.webhook.entity.WebhookEvent;
+import com.carlos.payflowguard.webhook.entity.WebhookEventStatus;
 import com.carlos.payflowguard.webhook.repository.WebhookEventRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
+import java.time.Instant;
 
 @Service
 public class WebhookEventService {
@@ -35,7 +38,9 @@ public class WebhookEventService {
         event.setEntityId(payment.getId());
         event.setPayload(payload);
 
-        webhookEventRepository.save(event);
+        WebhookEvent savedEvent = webhookEventRepository.save(event);
+
+        simulateDelivery(savedEvent);
     }
 
     public PageResponse<WebhookEventResponse> getAllEvents(int page, int size, String sort) {
@@ -60,6 +65,21 @@ public class WebhookEventService {
         return toResponse(event);
     }
 
+    private void simulateDelivery(WebhookEvent event) {
+        event.setAttemptCount(event.getAttemptCount() + 1);
+        event.setLastAttemptAt(Instant.now());
+
+        // Simulated delivery rule:
+        // even IDs succeed, odd IDs fail
+        if (event.getId() % 2 == 0) {
+            event.setStatus(WebhookEventStatus.SENT);
+        } else {
+            event.setStatus(WebhookEventStatus.FAILED);
+        }
+
+        webhookEventRepository.save(event);
+    }
+
     private WebhookEventResponse toResponse(WebhookEvent event) {
         return new WebhookEventResponse(
                 event.getId(),
@@ -67,6 +87,9 @@ public class WebhookEventService {
                 event.getEntityName(),
                 event.getEntityId(),
                 event.getPayload(),
+                event.getStatus(),
+                event.getAttemptCount(),
+                event.getLastAttemptAt(),
                 event.getCreatedAt()
         );
     }
