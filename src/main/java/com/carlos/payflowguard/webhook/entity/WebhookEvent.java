@@ -18,7 +18,7 @@ public class WebhookEvent {
 
     private Long entityId;
 
-    @Lob
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String payload;
 
     @Enumerated(EnumType.STRING)

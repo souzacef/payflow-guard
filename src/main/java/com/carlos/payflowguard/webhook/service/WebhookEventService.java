@@ -11,12 +11,16 @@ import com.carlos.payflowguard.webhook.repository.WebhookEventRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 
 @Service
 public class WebhookEventService {
+
+    private static final int MAX_ATTEMPTS = 3;
 
     private final WebhookEventRepository webhookEventRepository;
 
@@ -73,9 +77,27 @@ public class WebhookEventService {
             throw new IllegalArgumentException("Webhook event has already been sent");
         }
 
+        if (event.getAttemptCount() >= MAX_ATTEMPTS) {
+            throw new IllegalArgumentException("Webhook event reached maximum retry attempts");
+        }
+
         simulateDelivery(event);
 
         return toResponse(event);
+    }
+
+    @Scheduled(fixedDelay = 30000)
+    public void retryFailedEvents() {
+        System.out.println("Retry scheduler running...");
+        
+        List<WebhookEvent> failedEvents = webhookEventRepository.findByStatusAndAttemptCountLessThan(
+                WebhookEventStatus.FAILED,
+                MAX_ATTEMPTS
+        );
+
+        for (WebhookEvent event : failedEvents) {
+            simulateDelivery(event);
+        }
     }
 
     private void simulateDelivery(WebhookEvent event) {

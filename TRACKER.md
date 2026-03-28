@@ -202,3 +202,6 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Add retry endpoint for failed webhook events
 - [x] Increment webhook attempt count on retry
 - [x] Prevent retry of already sent webhook events
+- [x] Enable scheduled tasks for background retries
+- [x] Automatically retry failed webhook events
+- [x] Enforce maximum webhook retry attempts
