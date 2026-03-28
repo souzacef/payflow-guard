@@ -31,4 +31,10 @@ public class WebhookEventController {
     public WebhookEventResponse getEventById(@PathVariable Long id) {
         return webhookEventService.getEventById(id);
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{id}/retry")
+    public WebhookEventResponse retryEvent(@PathVariable Long id) {
+        return webhookEventService.retryEvent(id);
+    }
 }

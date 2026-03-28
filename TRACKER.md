@@ -196,3 +196,9 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Track attempt count and last attempt timestamp
 - [x] Simulate webhook delivery success/failure
 - [x] Expose webhook events via admin API
+
+## Day 8
+
+- [x] Add retry endpoint for failed webhook events
+- [x] Increment webhook attempt count on retry
+- [x] Prevent retry of already sent webhook events

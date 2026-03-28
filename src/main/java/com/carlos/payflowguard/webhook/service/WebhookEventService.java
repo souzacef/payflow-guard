@@ -65,13 +65,29 @@ public class WebhookEventService {
         return toResponse(event);
     }
 
+    public WebhookEventResponse retryEvent(Long id) {
+        WebhookEvent event = webhookEventRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Webhook event not found with id: " + id));
+
+        if (event.getStatus() == WebhookEventStatus.SENT) {
+            throw new IllegalArgumentException("Webhook event has already been sent");
+        }
+
+        simulateDelivery(event);
+
+        return toResponse(event);
+    }
+
     private void simulateDelivery(WebhookEvent event) {
         event.setAttemptCount(event.getAttemptCount() + 1);
         event.setLastAttemptAt(Instant.now());
 
-        // Simulated delivery rule:
-        // even IDs succeed, odd IDs fail
-        if (event.getId() % 2 == 0) {
+        /*
+         * Simulation rules:
+         * - First attempt: even IDs succeed, odd IDs fail
+         * - Second attempt onward: succeed
+         */
+        if (event.getAttemptCount() >= 2 || event.getId() % 2 == 0) {
             event.setStatus(WebhookEventStatus.SENT);
         } else {
             event.setStatus(WebhookEventStatus.FAILED);
