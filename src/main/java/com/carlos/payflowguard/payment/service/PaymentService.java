@@ -205,6 +205,11 @@ public class PaymentService {
         }
 
         PaymentStatus oldStatus = payment.getStatus();
+
+        if (oldStatus == request.getStatus()) {
+            throw new IllegalArgumentException("Status is already " + request.getStatus());
+        }
+
         payment.setStatus(request.getStatus());
 
         Payment updatedPayment = paymentRepository.save(payment);
@@ -239,6 +244,11 @@ public class PaymentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + id));
 
         PaymentStatus oldStatus = payment.getStatus();
+
+        if (oldStatus == request.getStatus()) {
+            throw new IllegalArgumentException("Status is already " + request.getStatus());
+        }
+
         payment.setStatus(request.getStatus());
 
         Payment updatedPayment = paymentRepository.save(payment);
