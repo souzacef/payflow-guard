@@ -89,6 +89,21 @@ public class PaymentService {
         );
     }
 
+    private void ensureAdmin(User user) {
+        if (user.getRole() != Role.ADMIN) {
+            throw new UnauthorizedException("Unauthorized");
+        }
+    }
+
+    private boolean isValidLifecycleTransition(PaymentStatus from, PaymentStatus to) {
+        return switch (from) {
+            case PENDING -> to == PaymentStatus.AUTHORIZED || to == PaymentStatus.FAILED;
+            case AUTHORIZED -> to == PaymentStatus.CAPTURED || to == PaymentStatus.FAILED;
+            case CAPTURED -> to == PaymentStatus.REFUNDED;
+            case FAILED, REFUNDED -> false;
+        };
+    }
+
     public PaymentResponse createPayment(CreatePaymentRequest request) {
         User user = getAuthenticatedUser();
         Merchant merchant;
@@ -188,29 +203,25 @@ public class PaymentService {
 
     public PaymentResponse updatePaymentStatus(Long id, UpdatePaymentStatusRequest request) {
         User user = getAuthenticatedUser();
-
-        if (user.getRole() != Role.ADMIN) {
-            throw new UnauthorizedException("Unauthorized");
-        }
+        ensureAdmin(user);
 
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + id));
 
-        if (payment.getStatus() != PaymentStatus.PENDING) {
-            throw new IllegalArgumentException("Only pending payments can be updated");
-        }
-
-        if (request.getStatus() == PaymentStatus.PENDING) {
-            throw new IllegalArgumentException("Invalid payment status transition");
-        }
-
         PaymentStatus oldStatus = payment.getStatus();
+        PaymentStatus newStatus = request.getStatus();
 
-        if (oldStatus == request.getStatus()) {
-            throw new IllegalArgumentException("Status is already " + request.getStatus());
+        if (oldStatus == newStatus) {
+            throw new IllegalArgumentException("Status is already " + newStatus);
         }
 
-        payment.setStatus(request.getStatus());
+        if (!isValidLifecycleTransition(oldStatus, newStatus)) {
+            throw new IllegalArgumentException(
+                    "Invalid payment status transition from " + oldStatus + " to " + newStatus
+            );
+        }
+
+        payment.setStatus(newStatus);
 
         Payment updatedPayment = paymentRepository.save(payment);
 
@@ -219,7 +230,7 @@ public class PaymentService {
                 "Payment",
                 payment.getId(),
                 user.getEmail(),
-                "Changed from " + oldStatus + " to " + request.getStatus() +
+                "Changed from " + oldStatus + " to " + newStatus +
                         (request.getReason() != null ? " | Reason: " + request.getReason() : "")
         );
 
@@ -235,10 +246,7 @@ public class PaymentService {
 
     public PaymentResponse overridePaymentStatus(Long id, OverridePaymentStatusRequest request) {
         User user = getAuthenticatedUser();
-
-        if (user.getRole() != Role.ADMIN) {
-            throw new UnauthorizedException("Unauthorized");
-        }
+        ensureAdmin(user);
 
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + id));

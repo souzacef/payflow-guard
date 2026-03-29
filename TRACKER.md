@@ -208,3 +208,6 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Replace simulated webhook delivery with real HTTP POST delivery
 - [x] Track webhook response status codes and delivery errors
 - [x] Keep manual and automatic retries for failed webhook delivery
+- [x] Expand payment lifecycle to AUTHORIZED, CAPTURED, REFUNDED
+- [x] Enforce valid payment state transitions
+- [x] Keep audit logs and webhook events for lifecycle changes
