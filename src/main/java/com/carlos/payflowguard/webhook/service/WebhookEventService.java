@@ -8,12 +8,18 @@ import com.carlos.payflowguard.webhook.dto.WebhookEventResponse;
 import com.carlos.payflowguard.webhook.entity.WebhookEvent;
 import com.carlos.payflowguard.webhook.entity.WebhookEventStatus;
 import com.carlos.payflowguard.webhook.repository.WebhookEventRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.util.List;
 
@@ -21,11 +27,19 @@ import java.util.List;
 public class WebhookEventService {
 
     private static final int MAX_ATTEMPTS = 3;
+    private static final int MAX_ERROR_LENGTH = 1000;
 
     private final WebhookEventRepository webhookEventRepository;
+    private final HttpClient httpClient;
+    private final String paymentStatusUrl;
 
-    public WebhookEventService(WebhookEventRepository webhookEventRepository) {
+    public WebhookEventService(
+            WebhookEventRepository webhookEventRepository,
+            @Value("${app.webhooks.payment-status-url}") String paymentStatusUrl
+    ) {
         this.webhookEventRepository = webhookEventRepository;
+        this.paymentStatusUrl = paymentStatusUrl;
+        this.httpClient = HttpClient.newHttpClient();
     }
 
     public void publishPaymentStatusUpdated(
@@ -41,10 +55,11 @@ public class WebhookEventService {
         event.setEntityName("Payment");
         event.setEntityId(payment.getId());
         event.setPayload(payload);
+        event.setTargetUrl(paymentStatusUrl);
 
         WebhookEvent savedEvent = webhookEventRepository.save(event);
 
-        simulateDelivery(savedEvent);
+        deliver(savedEvent);
     }
 
     public PageResponse<WebhookEventResponse> getAllEvents(int page, int size, String sort) {
@@ -81,38 +96,54 @@ public class WebhookEventService {
             throw new IllegalArgumentException("Webhook event reached maximum retry attempts");
         }
 
-        simulateDelivery(event);
+        deliver(event);
 
         return toResponse(event);
     }
 
     @Scheduled(fixedDelay = 30000)
     public void retryFailedEvents() {
-        System.out.println("Retry scheduler running...");
-        
         List<WebhookEvent> failedEvents = webhookEventRepository.findByStatusAndAttemptCountLessThan(
                 WebhookEventStatus.FAILED,
                 MAX_ATTEMPTS
         );
 
         for (WebhookEvent event : failedEvents) {
-            simulateDelivery(event);
+            deliver(event);
         }
     }
 
-    private void simulateDelivery(WebhookEvent event) {
+    private void deliver(WebhookEvent event) {
         event.setAttemptCount(event.getAttemptCount() + 1);
         event.setLastAttemptAt(Instant.now());
 
-        /*
-         * Simulation rules:
-         * - First attempt: even IDs succeed, odd IDs fail
-         * - Second attempt onward: succeed
-         */
-        if (event.getAttemptCount() >= 2 || event.getId() % 2 == 0) {
-            event.setStatus(WebhookEventStatus.SENT);
-        } else {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(event.getTargetUrl()))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(event.getPayload()))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            event.setResponseStatusCode(response.statusCode());
+
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                event.setStatus(WebhookEventStatus.SENT);
+                event.setLastError(null);
+            } else {
+                event.setStatus(WebhookEventStatus.FAILED);
+                event.setLastError(truncate("HTTP " + response.statusCode() + ": " + response.body()));
+            }
+
+        } catch (IOException | InterruptedException ex) {
             event.setStatus(WebhookEventStatus.FAILED);
+            event.setResponseStatusCode(null);
+            event.setLastError(truncate(ex.getMessage()));
+
+            if (ex instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
         }
 
         webhookEventRepository.save(event);
@@ -125,6 +156,9 @@ public class WebhookEventService {
                 event.getEntityName(),
                 event.getEntityId(),
                 event.getPayload(),
+                event.getTargetUrl(),
+                event.getResponseStatusCode(),
+                event.getLastError(),
                 event.getStatus(),
                 event.getAttemptCount(),
                 event.getLastAttemptAt(),
@@ -179,5 +213,17 @@ public class WebhookEventService {
 
     private String escapeJson(String value) {
         return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private String truncate(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value.length() <= MAX_ERROR_LENGTH) {
+            return value;
+        }
+
+        return value.substring(0, MAX_ERROR_LENGTH);
     }
 }

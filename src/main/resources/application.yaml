@@ -11,3 +11,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+app:
+  webhooks:
+    payment-status-url: "https://webhook.site/7ed95e6a-71d1-4bb3-b799-726d9a003ba2"
