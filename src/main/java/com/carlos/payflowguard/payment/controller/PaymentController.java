@@ -4,10 +4,12 @@ import com.carlos.payflowguard.common.response.PageResponse;
 import com.carlos.payflowguard.payment.dto.CreatePaymentRequest;
 import com.carlos.payflowguard.payment.dto.OverridePaymentStatusRequest;
 import com.carlos.payflowguard.payment.dto.PaymentResponse;
+import com.carlos.payflowguard.payment.dto.RefundPaymentRequest;
 import com.carlos.payflowguard.payment.dto.UpdatePaymentStatusRequest;
 import com.carlos.payflowguard.payment.entity.PaymentStatus;
 import com.carlos.payflowguard.payment.service.PaymentService;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -55,5 +57,13 @@ public class PaymentController {
             @Valid @RequestBody OverridePaymentStatusRequest request
     ) {
         return paymentService.overridePaymentStatus(id, request);
+    }
+
+    @PostMapping("/{id}/refund")
+    public ResponseEntity<PaymentResponse> refundPayment(
+            @PathVariable Long id,
+            @Valid @RequestBody RefundPaymentRequest request
+    ) {
+        return ResponseEntity.ok(paymentService.refundPayment(id, request));
     }
 }

@@ -10,10 +10,13 @@ import com.carlos.payflowguard.merchant.repository.MerchantRepository;
 import com.carlos.payflowguard.payment.dto.CreatePaymentRequest;
 import com.carlos.payflowguard.payment.dto.OverridePaymentStatusRequest;
 import com.carlos.payflowguard.payment.dto.PaymentResponse;
+import com.carlos.payflowguard.payment.dto.RefundPaymentRequest;
 import com.carlos.payflowguard.payment.dto.UpdatePaymentStatusRequest;
 import com.carlos.payflowguard.payment.entity.Payment;
 import com.carlos.payflowguard.payment.entity.PaymentStatus;
+import com.carlos.payflowguard.payment.entity.Refund;
 import com.carlos.payflowguard.payment.repository.PaymentRepository;
+import com.carlos.payflowguard.payment.repository.RefundRepository;
 import com.carlos.payflowguard.user.entity.Role;
 import com.carlos.payflowguard.user.entity.User;
 import com.carlos.payflowguard.user.repository.UserRepository;
@@ -33,6 +36,7 @@ public class PaymentService {
     private final FraudCheckService fraudCheckService;
     private final AuditLogService auditLogService;
     private final WebhookEventService webhookEventService;
+    private final RefundRepository refundRepository;
 
     public PaymentService(
             PaymentRepository paymentRepository,
@@ -40,7 +44,8 @@ public class PaymentService {
             UserRepository userRepository,
             FraudCheckService fraudCheckService,
             AuditLogService auditLogService,
-            WebhookEventService webhookEventService
+            WebhookEventService webhookEventService,
+            RefundRepository refundRepository
     ) {
         this.paymentRepository = paymentRepository;
         this.merchantRepository = merchantRepository;
@@ -48,6 +53,7 @@ public class PaymentService {
         this.fraudCheckService = fraudCheckService;
         this.auditLogService = auditLogService;
         this.webhookEventService = webhookEventService;
+        this.refundRepository = refundRepository;
     }
 
     private User getAuthenticatedUser() {
@@ -80,6 +86,7 @@ public class PaymentService {
                 payment.getMerchant().getId(),
                 payment.getMerchant().getBusinessName(),
                 payment.getAmountMinor(),
+                payment.getRefundedAmountMinor(),
                 payment.getCurrency(),
                 payment.getDescription(),
                 payment.getStatus(),
@@ -129,6 +136,7 @@ public class PaymentService {
         Payment payment = new Payment();
         payment.setMerchant(merchant);
         payment.setAmountMinor(request.getAmountMinor());
+        payment.setRefundedAmountMinor(0L);
         payment.setCurrency(request.getCurrency().toUpperCase());
         payment.setDescription(request.getDescription());
 
@@ -268,6 +276,70 @@ public class PaymentService {
                 user.getEmail(),
                 "Overridden from " + oldStatus + " to " + request.getStatus() +
                         " | Reason: " + request.getReason()
+        );
+
+        webhookEventService.publishPaymentStatusUpdated(
+                updatedPayment,
+                oldStatus,
+                updatedPayment.getStatus(),
+                request.getReason()
+        );
+
+        return toResponse(updatedPayment);
+    }
+
+    public PaymentResponse refundPayment(Long id, RefundPaymentRequest request) {
+        User user = getAuthenticatedUser();
+        ensureAdmin(user);
+
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + id));
+
+        if (payment.getStatus() != PaymentStatus.CAPTURED && payment.getStatus() != PaymentStatus.REFUNDED) {
+            throw new IllegalArgumentException("Only captured or partially refunded payments can be refunded");
+        }
+
+        long alreadyRefunded = payment.getRefundedAmountMinor();
+        long total = payment.getAmountMinor();
+        long requested = request.getAmountMinor();
+
+        if (requested <= 0) {
+            throw new IllegalArgumentException("Refund amount must be greater than zero");
+        }
+
+        long remaining = total - alreadyRefunded;
+
+        if (requested > remaining) {
+            throw new IllegalArgumentException("Refund exceeds remaining amount");
+        }
+
+        Refund refund = new Refund();
+        refund.setPayment(payment);
+        refund.setAmountMinor(requested);
+        refund.setReason(request.getReason());
+
+        refundRepository.save(refund);
+
+        long newRefundedTotal = alreadyRefunded + requested;
+        PaymentStatus oldStatus = payment.getStatus();
+
+        payment.setRefundedAmountMinor(newRefundedTotal);
+
+        if (newRefundedTotal == total) {
+            payment.setStatus(PaymentStatus.REFUNDED);
+        }
+
+        Payment updatedPayment = paymentRepository.save(payment);
+
+        auditLogService.log(
+                "PAYMENT_REFUND_CREATED",
+                "Payment",
+                payment.getId(),
+                user.getEmail(),
+                "RefundId=" + refund.getId() +
+                        " | Amount=" + requested +
+                        " | TotalRefunded=" + newRefundedTotal +
+                        (request.getReason() != null ? " | Reason: " + request.getReason() : "")
         );
 
         webhookEventService.publishPaymentStatusUpdated(

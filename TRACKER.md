@@ -211,3 +211,17 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Expand payment lifecycle to AUTHORIZED, CAPTURED, REFUNDED
 - [x] Enforce valid payment state transitions
 - [x] Keep audit logs and webhook events for lifecycle changes
+
+## Day 9
+
+- [x] Implement partial refunds
+- [x] Track refunded amount
+- [x] Prevent over-refunding
+- [x] Transition to REFUNDED when fully refunded
+
+## Day 10
+
+- [x] Implement refund entity
+- [x] Store individual refund records
+- [x] Link refunds to payments
+- [x] Preserve aggregated refund logic

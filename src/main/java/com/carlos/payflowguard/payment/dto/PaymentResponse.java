@@ -10,6 +10,7 @@ public class PaymentResponse {
     private Long merchantId;
     private String merchantBusinessName;
     private Long amountMinor;
+    private Long refundedAmountMinor;
     private String currency;
     private String description;
     private PaymentStatus status;
@@ -22,6 +23,7 @@ public class PaymentResponse {
             Long merchantId,
             String merchantBusinessName,
             Long amountMinor,
+            Long refundedAmountMinor,
             String currency,
             String description,
             PaymentStatus status,
@@ -33,6 +35,7 @@ public class PaymentResponse {
         this.merchantId = merchantId;
         this.merchantBusinessName = merchantBusinessName;
         this.amountMinor = amountMinor;
+        this.refundedAmountMinor = refundedAmountMinor;
         this.currency = currency;
         this.description = description;
         this.status = status;
@@ -55,6 +58,10 @@ public class PaymentResponse {
 
     public Long getAmountMinor() {
         return amountMinor;
+    }
+
+    public Long getRefundedAmountMinor() {
+        return refundedAmountMinor;
     }
 
     public String getCurrency() {

@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+import java.util.List;
 
 @Entity
 public class Payment {
@@ -21,6 +22,9 @@ public class Payment {
     @Column(nullable = false)
     private Long amountMinor;
 
+    @Column(nullable = false)
+    private Long refundedAmountMinor = 0L;
+
     @Column(nullable = false, length = 3)
     private String currency;
 
@@ -31,6 +35,9 @@ public class Payment {
     private PaymentStatus status;
 
     private String fraudReason;
+
+    @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Refund> refunds;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -55,6 +62,10 @@ public class Payment {
         return amountMinor;
     }
 
+    public Long getRefundedAmountMinor() {
+        return refundedAmountMinor;
+    }
+
     public String getCurrency() {
         return currency;
     }
@@ -69,6 +80,10 @@ public class Payment {
 
     public String getFraudReason() {
         return fraudReason;
+    }
+
+    public List<Refund> getRefunds() {
+        return refunds;
     }
 
     public Instant getCreatedAt() {
@@ -91,6 +106,10 @@ public class Payment {
         this.amountMinor = amountMinor;
     }
 
+    public void setRefundedAmountMinor(Long refundedAmountMinor) {
+        this.refundedAmountMinor = refundedAmountMinor;
+    }
+
     public void setCurrency(String currency) {
         this.currency = currency;
     }
@@ -105,5 +124,9 @@ public class Payment {
 
     public void setFraudReason(String fraudReason) {
         this.fraudReason = fraudReason;
+    }
+
+    public void setRefunds(List<Refund> refunds) {
+        this.refunds = refunds;
     }
 }
