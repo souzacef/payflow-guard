@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.Instant;
+import java.util.Optional;
 
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
@@ -31,4 +32,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Page<Payment> findByMerchantIdAndStatus(Long merchantId, PaymentStatus status, Pageable pageable);
 
     long countByMerchantIdAndCreatedAtAfter(Long merchantId, Instant createdAt);
+
+    Optional<Payment> findByMerchantIdAndIdempotencyKey(Long merchantId, String idempotencyKey);
+
+    Optional<Payment> findByMerchantUserAndMerchantIdAndIdempotencyKey(User user, Long merchantId, String idempotencyKey);
 }

@@ -228,3 +228,6 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Implement payment status update endpoint
 - [x] Enforce payment lifecycle transitions
 - [x] Prevent invalid state changes
+- [x] Add idempotent payment creation using Idempotency-Key
+- [x] Prevent duplicate payment creation on retried requests
+- [x] Persist idempotency key on payments

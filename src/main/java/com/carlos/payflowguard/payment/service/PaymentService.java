@@ -111,8 +111,14 @@ public class PaymentService {
         };
     }
 
-    public PaymentResponse createPayment(CreatePaymentRequest request) {
+    public PaymentResponse createPayment(CreatePaymentRequest request, String idempotencyKey) {
         User user = getAuthenticatedUser();
+
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            throw new IllegalArgumentException("Idempotency-Key header is required");
+        }
+
+        String normalizedIdempotencyKey = idempotencyKey.trim();
         Merchant merchant;
 
         if (user.getRole() == Role.ADMIN) {
@@ -120,11 +126,27 @@ public class PaymentService {
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Merchant not found with id: " + request.getMerchantId()
                     ));
+
+            Payment existingPayment = paymentRepository
+                    .findByMerchantIdAndIdempotencyKey(merchant.getId(), normalizedIdempotencyKey)
+                    .orElse(null);
+
+            if (existingPayment != null) {
+                return toResponse(existingPayment);
+            }
         } else {
             merchant = merchantRepository.findByIdAndUser(request.getMerchantId(), user)
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Merchant not found with id: " + request.getMerchantId()
                     ));
+
+            Payment existingPayment = paymentRepository
+                    .findByMerchantUserAndMerchantIdAndIdempotencyKey(user, merchant.getId(), normalizedIdempotencyKey)
+                    .orElse(null);
+
+            if (existingPayment != null) {
+                return toResponse(existingPayment);
+            }
         }
 
         if (merchant.getStatus() != MerchantStatus.ACTIVE) {
@@ -139,6 +161,7 @@ public class PaymentService {
         payment.setRefundedAmountMinor(0L);
         payment.setCurrency(request.getCurrency().toUpperCase());
         payment.setDescription(request.getDescription());
+        payment.setIdempotencyKey(normalizedIdempotencyKey);
 
         if (fraudCheckResult.isPassed()) {
             payment.setStatus(PaymentStatus.PENDING);

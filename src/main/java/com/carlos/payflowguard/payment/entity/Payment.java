@@ -9,6 +9,11 @@ import java.time.Instant;
 import java.util.List;
 
 @Entity
+@Table(
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_payment_merchant_idempotency", columnNames = {"merchant_id", "idempotency_key"})
+        }
+)
 public class Payment {
 
     @Id
@@ -29,6 +34,9 @@ public class Payment {
     private String currency;
 
     private String description;
+
+    @Column(name = "idempotency_key", length = 255)
+    private String idempotencyKey;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -74,6 +82,10 @@ public class Payment {
         return description;
     }
 
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
     public PaymentStatus getStatus() {
         return status;
     }
@@ -116,6 +128,10 @@ public class Payment {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 
     public void setStatus(PaymentStatus status) {

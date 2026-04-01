@@ -23,8 +23,11 @@ public class PaymentController {
     }
 
     @PostMapping
-    public PaymentResponse createPayment(@Valid @RequestBody CreatePaymentRequest request) {
-        return paymentService.createPayment(request);
+    public PaymentResponse createPayment(
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
+            @Valid @RequestBody CreatePaymentRequest request
+    ) {
+        return paymentService.createPayment(request, idempotencyKey);
     }
 
     @GetMapping
