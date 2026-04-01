@@ -225,3 +225,6 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Store individual refund records
 - [x] Link refunds to payments
 - [x] Preserve aggregated refund logic
+- [x] Implement payment status update endpoint
+- [x] Enforce payment lifecycle transitions
+- [x] Prevent invalid state changes

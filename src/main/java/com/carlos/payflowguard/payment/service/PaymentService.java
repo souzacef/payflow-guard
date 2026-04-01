@@ -106,7 +106,7 @@ public class PaymentService {
         return switch (from) {
             case PENDING -> to == PaymentStatus.AUTHORIZED || to == PaymentStatus.FAILED;
             case AUTHORIZED -> to == PaymentStatus.CAPTURED || to == PaymentStatus.FAILED;
-            case CAPTURED -> to == PaymentStatus.REFUNDED;
+            case CAPTURED -> false;
             case FAILED, REFUNDED -> false;
         };
     }
