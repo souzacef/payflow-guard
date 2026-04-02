@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/payflowguard
+    url: jdbc:postgresql://localhost:5432/payflowguard_test
     username: postgres
     password: postgres
 

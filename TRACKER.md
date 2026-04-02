@@ -234,9 +234,12 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 
 ## Day 11
 
-- [x] Fix test environment issues
-- [x] Move tests to correct directory (src/test/java)
-- [x] Configure application-test.yml
-- [x] Fix Spring Boot 4 test annotations
-- [x] Remove invalid TestController
-- [x] Validate idempotency with integration test
+- [x] Add idempotent payment creation using Idempotency-Key
+- [x] Prevent duplicate payment creation on retried requests
+- [x] Persist idempotency key on payments
+- [x] Fix idempotency column/index mapping in PostgreSQL
+- [x] Add integration test for idempotent payment creation
+- [x] Fix test environment setup and remove invalid TestController
+- [x] Separate test database configuration from main app database
+- [x] Recreate users and merchants after test DB collision
+- [x] Validate payment lifecycle flow end-to-end

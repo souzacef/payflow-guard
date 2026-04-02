@@ -252,6 +252,8 @@ public class PaymentService {
             );
         }
 
+        PaymentStatusValidator.validateTransition(payment.getStatus(), request.getStatus());
+
         payment.setStatus(newStatus);
 
         Payment updatedPayment = paymentRepository.save(payment);
