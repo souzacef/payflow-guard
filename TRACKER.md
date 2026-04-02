@@ -231,3 +231,12 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Add idempotent payment creation using Idempotency-Key
 - [x] Prevent duplicate payment creation on retried requests
 - [x] Persist idempotency key on payments
+
+## Day 11
+
+- [x] Fix test environment issues
+- [x] Move tests to correct directory (src/test/java)
+- [x] Configure application-test.yml
+- [x] Fix Spring Boot 4 test annotations
+- [x] Remove invalid TestController
+- [x] Validate idempotency with integration test
