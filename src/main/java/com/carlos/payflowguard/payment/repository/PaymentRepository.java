@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
@@ -36,4 +37,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByMerchantIdAndIdempotencyKey(Long merchantId, String idempotencyKey);
 
     Optional<Payment> findByMerchantUserAndMerchantIdAndIdempotencyKey(User user, Long merchantId, String idempotencyKey);
+
+    List<Payment> findByStatus(PaymentStatus status);
 }
