@@ -243,3 +243,10 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Separate test database configuration from main app database
 - [x] Recreate users and merchants after test DB collision
 - [x] Validate payment lifecycle flow end-to-end
+
+## Day 12
+
+- [x] Enforce refund rules based on lifecycle
+- [x] Prevent refunds before capture
+- [x] Prevent over-refunding
+- [x] Support partial refunds with correct status transition

@@ -252,8 +252,6 @@ public class PaymentService {
             );
         }
 
-        PaymentStatusValidator.validateTransition(payment.getStatus(), request.getStatus());
-
         payment.setStatus(newStatus);
 
         Payment updatedPayment = paymentRepository.save(payment);
@@ -320,37 +318,40 @@ public class PaymentService {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + id));
 
-        if (payment.getStatus() != PaymentStatus.CAPTURED && payment.getStatus() != PaymentStatus.REFUNDED) {
-            throw new IllegalArgumentException("Only captured or partially refunded payments can be refunded");
+        if (payment.getStatus() != PaymentStatus.CAPTURED) {
+            throw new IllegalStateException("Only captured payments can be refunded");
         }
 
+        long totalAmount = payment.getAmountMinor();
         long alreadyRefunded = payment.getRefundedAmountMinor();
-        long total = payment.getAmountMinor();
-        long requested = request.getAmountMinor();
+        long remainingAmount = totalAmount - alreadyRefunded;
+        long requestedAmount = request.getAmountMinor();
 
-        if (requested <= 0) {
+        if (remainingAmount == 0) {
+            throw new IllegalStateException("Payment is already fully refunded");
+        }
+
+        if (requestedAmount <= 0) {
             throw new IllegalArgumentException("Refund amount must be greater than zero");
         }
 
-        long remaining = total - alreadyRefunded;
-
-        if (requested > remaining) {
-            throw new IllegalArgumentException("Refund exceeds remaining amount");
+        if (requestedAmount > remainingAmount) {
+            throw new IllegalStateException("Refund amount exceeds remaining captured amount");
         }
 
         Refund refund = new Refund();
         refund.setPayment(payment);
-        refund.setAmountMinor(requested);
+        refund.setAmountMinor(requestedAmount);
         refund.setReason(request.getReason());
 
         refundRepository.save(refund);
 
-        long newRefundedTotal = alreadyRefunded + requested;
+        long newRefundedAmount = alreadyRefunded + requestedAmount;
         PaymentStatus oldStatus = payment.getStatus();
 
-        payment.setRefundedAmountMinor(newRefundedTotal);
+        payment.setRefundedAmountMinor(newRefundedAmount);
 
-        if (newRefundedTotal == total) {
+        if (newRefundedAmount == totalAmount) {
             payment.setStatus(PaymentStatus.REFUNDED);
         }
 
@@ -362,8 +363,8 @@ public class PaymentService {
                 payment.getId(),
                 user.getEmail(),
                 "RefundId=" + refund.getId() +
-                        " | Amount=" + requested +
-                        " | TotalRefunded=" + newRefundedTotal +
+                        " | Amount=" + requestedAmount +
+                        " | TotalRefunded=" + newRefundedAmount +
                         (request.getReason() != null ? " | Reason: " + request.getReason() : "")
         );
 
