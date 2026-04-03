@@ -252,3 +252,5 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Support partial refunds with correct status transition
 - [x] Add automatic capture for authorized payments
 - [x] Emit audit log and webhook on automatic capture
+- [x] Add refund history endpoint per payment
+- [x] Restrict refund history access by payment ownership

@@ -11,6 +11,7 @@ import com.carlos.payflowguard.payment.dto.CreatePaymentRequest;
 import com.carlos.payflowguard.payment.dto.OverridePaymentStatusRequest;
 import com.carlos.payflowguard.payment.dto.PaymentResponse;
 import com.carlos.payflowguard.payment.dto.RefundPaymentRequest;
+import com.carlos.payflowguard.payment.dto.RefundResponse;
 import com.carlos.payflowguard.payment.dto.UpdatePaymentStatusRequest;
 import com.carlos.payflowguard.payment.entity.Payment;
 import com.carlos.payflowguard.payment.entity.PaymentStatus;
@@ -26,6 +27,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class PaymentService {
@@ -93,6 +96,16 @@ public class PaymentService {
                 payment.getFraudReason(),
                 payment.getCreatedAt(),
                 payment.getUpdatedAt()
+        );
+    }
+
+    private RefundResponse toRefundResponse(Refund refund) {
+        return new RefundResponse(
+                refund.getId(),
+                refund.getPayment().getId(),
+                refund.getAmountMinor(),
+                refund.getReason(),
+                refund.getCreatedAt()
         );
     }
 
@@ -230,6 +243,22 @@ public class PaymentService {
         }
 
         return toResponse(payment);
+    }
+
+    public List<RefundResponse> getRefundsByPaymentId(Long paymentId) {
+        User user = getAuthenticatedUser();
+
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + paymentId));
+
+        if (user.getRole() != Role.ADMIN && !payment.getMerchant().getUser().getId().equals(user.getId())) {
+            throw new ResourceNotFoundException("Payment not found with id: " + paymentId);
+        }
+
+        return refundRepository.findByPaymentIdOrderByCreatedAtAsc(paymentId)
+                .stream()
+                .map(this::toRefundResponse)
+                .toList();
     }
 
     public PaymentResponse updatePaymentStatus(Long id, UpdatePaymentStatusRequest request) {

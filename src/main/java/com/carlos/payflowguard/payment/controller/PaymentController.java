@@ -5,12 +5,15 @@ import com.carlos.payflowguard.payment.dto.CreatePaymentRequest;
 import com.carlos.payflowguard.payment.dto.OverridePaymentStatusRequest;
 import com.carlos.payflowguard.payment.dto.PaymentResponse;
 import com.carlos.payflowguard.payment.dto.RefundPaymentRequest;
+import com.carlos.payflowguard.payment.dto.RefundResponse;
 import com.carlos.payflowguard.payment.dto.UpdatePaymentStatusRequest;
 import com.carlos.payflowguard.payment.entity.PaymentStatus;
 import com.carlos.payflowguard.payment.service.PaymentService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/payments")
@@ -44,6 +47,11 @@ public class PaymentController {
     @GetMapping("/{id}")
     public PaymentResponse getPaymentById(@PathVariable Long id) {
         return paymentService.getPaymentById(id);
+    }
+
+    @GetMapping("/{id}/refunds")
+    public List<RefundResponse> getRefundsByPaymentId(@PathVariable Long id) {
+        return paymentService.getRefundsByPaymentId(id);
     }
 
     @PatchMapping("/{id}/status")
