@@ -1,14 +1,16 @@
-# PayFlow Guard
+# PayFlow Guard 💳🛡️
+
+[🇧🇷 Versão em Português](README.pt-BR.md)
 
 PayFlow Guard is a backend API for merchant and payment management with a focus on security, scalability, and fraud-aware architecture.
 
-Built with Java 21 and Spring Boot, the project models a real-world payment processing backend, including authentication, merchant management, and secure multi-tenant data handling.
+Built with Java 21 and Spring Boot, the project models a real-world payment processing backend, including authentication, merchant management, payment lifecycle, refunds, and webhook systems.
 
 ---
 
 ## 🎯 Purpose
 
-This project was designed to simulate a real-world payment backend similar to systems used by fintech companies like Worldpay.
+This project simulates a real-world payment backend similar to systems used by fintech companies.
 
 It focuses on:
 
@@ -16,6 +18,7 @@ It focuses on:
 * multi-tenant data isolation
 * scalable API design
 * clean architecture principles
+* state-driven payment processing
 
 ---
 
@@ -27,53 +30,132 @@ It focuses on:
 * BCrypt password hashing
 * Secure login and registration
 * Protected endpoints with token validation
-* Multi-tenant data isolation (users only access their own data)
+* Multi-tenant data isolation
 * Role-based access control (USER / ADMIN)
 
+---
 
 ### 🏪 Merchant Management
 
 * Create, update, delete merchants
 * Pagination, filtering, and sorting
-* Merchant status management (ACTIVE / INACTIVE)
+* Merchant status (ACTIVE / INACTIVE)
 * User-scoped data access
 
+---
 
-### 💳 Payments & Fraud Checks
-- Create payments linked to merchants
-- Automatic fraud validation on creation
-- Status lifecycle: PENDING → APPROVED / FAILED
-- Fraud rules:
-  - High-value transactions blocked
-  - Rapid repeated transactions blocked
-- Fraud reason stored and returned in API
+### 💳 Payment System
 
+* Create payments linked to merchants
+* Full lifecycle:
+
+```
+PENDING → AUTHORIZED → CAPTURED → REFUNDED / FAILED
+```
+
+* Strict transition validation
+* Admin-controlled state updates
+* Automatic capture (scheduler)
+
+---
+
+### 🧪 Fraud Detection
+
+* Automatic validation during payment creation
+* Rules implemented:
+
+  * High-value transaction blocking
+  * Velocity-based blocking (too many attempts)
+* Fraud reason stored and returned in API
+
+---
+
+### 🔁 Idempotency (Production-grade)
+
+* Prevents duplicate payments
+* Uses `Idempotency-Key` header
+* Same request = same response
+* Scoped per merchant
+
+---
+
+### 💸 Refund System
+
+* Partial refunds supported
+* Multiple refunds per payment
+* Tracks:
+
+  * total refunded amount
+  * individual refund records
+
+---
+
+### 📜 Refund History
+
+```
+GET /api/v1/payments/{id}/refunds
+```
+
+Returns full refund timeline per payment.
+
+---
+
+### ⚙️ Automatic Capture
+
+* Scheduled process:
+
+```
+AUTHORIZED → CAPTURED
+```
+
+* Emits audit logs and webhooks
+
+---
+
+### 📡 Webhooks
+
+* Event: `payment.status.updated`
+* Stores delivery attempts
+* Retry mechanism for failures
+
+---
+
+### 🧾 Audit Logging
+
+Tracks:
+
+* payment status changes
+* refunds
+* overrides
+* automatic operations
+
+---
 
 ### 📊 API Design
 
 * RESTful endpoints (`/api/v1/...`)
-* Clean request/response DTOs
+* Clean DTO-based responses
 * Global exception handling
-* Consistent error response structure
+* Consistent error format
+* Proper HTTP status codes
 
-### 🕒 Audit & Metadata
+---
 
-* Automatic `createdAt` and `updatedAt` timestamps
-* Hibernate-managed lifecycle fields
+### 🧪 Tests
 
-### 📄 Documentation
+* Integration tests:
 
-* Swagger / OpenAPI integration
-* JWT authentication support in Swagger UI
+  * Idempotency
+  * Refund history
 
 ---
 
 ## 🔒 Security Highlights
 
-* Stateless authentication using JWT
-* Passwords stored using BCrypt hashing
-* Endpoint protection via Spring Security filters
-* User-level data isolation enforced at query level
+* Stateless authentication (JWT)
+* BCrypt password hashing
+* Spring Security filters
+* Per-user data isolation enforced at query level
 
 ---
 
@@ -84,52 +166,47 @@ It focuses on:
 * Spring Security
 * Spring Data JPA (Hibernate)
 * PostgreSQL (Docker)
-* JWT (authentication)
+* JWT
 * Maven
-* Swagger / OpenAPI (springdoc)
+* Swagger / OpenAPI
 
 ---
 
 ## 🏗️ Architecture
 
-The project follows a layered architecture:
-
 ```
 Controller → Service → Repository → Database
 ```
 
-* **Controller**: Handles HTTP requests/responses
-* **Service**: Business logic and validation
-* **Repository**: Data access (JPA)
-* **DTOs**: Clean API contracts (no entity leakage)
+* **Controller** → HTTP layer
+* **Service** → business logic
+* **Repository** → persistence
+* **DTOs** → API contracts
 
-### Key Design Decisions
+### Cross-cutting concerns
 
-* Use of DTOs to decouple API from persistence layer
-* Enum modeling for controlled domain values
-* Centralized exception handling with `@RestControllerAdvice`
-* Stateless authentication with JWT
-* Per-user data isolation enforced at query level
+* Security (JWT)
+* Audit logging
+* Webhooks
+* Scheduler
 
 ---
 
 ## 🔑 Authentication Flow
 
-1. User registers:
+1. Register:
 
 ```
 POST /api/v1/auth/register
 ```
 
-2. User logs in:
+2. Login:
 
 ```
 POST /api/v1/auth/login
 ```
 
-3. API returns JWT token
-
-4. Token is used in requests:
+3. Use token:
 
 ```
 Authorization: Bearer <token>
@@ -139,43 +216,30 @@ Authorization: Bearer <token>
 
 ## 📦 Example Endpoints
 
-### Get current user
+### Create Payment
 
 ```
-GET /api/v1/auth/me
+POST /api/v1/payments
+Headers:
+  Idempotency-Key: abc-123
 ```
 
-### Create merchant
+### Update Payment Status
 
 ```
-POST /api/v1/merchants
+PATCH /api/v1/payments/{id}/status
 ```
 
-### Get merchants (with pagination)
+### Refund Payment
 
 ```
-GET /api/v1/merchants?page=0&size=20&sort=id,asc
+POST /api/v1/payments/{id}/refund
 ```
 
-### Update merchant status
+### Refund History
 
 ```
-PATCH /api/v1/merchants/{id}/status
-```
-
----
-
-## 📥 Example Response
-
-```json
-{
-  "id": 1,
-  "businessName": "My Store",
-  "email": "store@email.com",
-  "status": "ACTIVE",
-  "createdAt": "2026-03-24T10:30:00Z",
-  "updatedAt": "2026-03-24T10:30:00Z"
-}
+GET /api/v1/payments/{id}/refunds
 ```
 
 ---
@@ -195,52 +259,57 @@ cd payflow-guard
 docker compose up -d
 ```
 
-### 3. Run the application
+### 3. Run application
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-### 4. Access Swagger UI
+### 4. Swagger UI
 
 http://localhost:8080/swagger-ui/index.html
 
 ---
 
-## 🧪 Example Test Flow
+## 🧪 Example Flow
 
 1. Register user
-2. Login and get JWT
-3. Authorize in Swagger
-4. Create merchant
-5. Retrieve merchant list
-6. Update merchant status
+2. Login and obtain JWT
+3. Create merchant
+4. Create payment
+5. Authorize payment
+6. Wait for automatic capture
+7. Perform partial refunds
+8. Retrieve refund history
 
 ---
 
 ## 📸 API Preview
 
 ![Swagger Overview](docs/swagger-overview.png)
-![Swagger Overview](docs/swagger-endpoints.png)
-![Swagger Overview](docs/swagger-request.png)
+![Swagger Endpoints](docs/swagger-endpoints.png)
+![Swagger Request](docs/swagger-request.png)
 
 ---
 
 ## 📌 Roadmap
 
-* [ ] Payment processing module
-* [ ] Fraud detection rules
-* [ ] Role-based access (ADMIN / USER)
-* [ ] Webhooks
-* [ ] Integration with external APIs (FX, payment gateways)
-* [ ] Automated tests (unit + integration)
+* [x] Payment lifecycle
+* [x] Fraud detection
+* [x] Role-based access
+* [x] Webhooks with retry
+* [x] Refund system with history
+* [x] Idempotency
+* [ ] External payment gateway integration
+* [ ] FX / currency conversion
+* [ ] Advanced fraud rules
 
 ---
 
 ## 👨‍💻 Author
 
 Carlos Eduardo Freire de Souza
-Backend Developer focused on Java, APIs, and AI integration
+Backend Developer focused on Java, APIs, and AI
 
 GitHub: https://github.com/souzacef
 LinkedIn: https://linkedin.com/in/carlosefsouza
@@ -251,7 +320,15 @@ LinkedIn: https://linkedin.com/in/carlosefsouza
 
 This project was built as a portfolio piece with focus on:
 
-* real-world backend patterns
-* clean architecture
-* production-like features
+* real-world backend architecture
+* production-like behavior
+* stateful business logic
 * interview readiness
+
+---
+
+## 🧠 Final Thought
+
+Payments are not just transactions.
+
+They are **state machines with consequences**.
