@@ -159,7 +159,7 @@ Controller → Service → Repository → Database
 
 ---
 
-## 🧠 Arquitetura Explicada (Para Entrevistas)
+## 🧠 Arquitetura Explicada
 
 O sistema segue uma arquitetura em camadas com separação clara de responsabilidades:
 
@@ -276,25 +276,6 @@ Webhook
 
 * **Resiliência**
   Webhooks são reenviados em caso de falha
-
-### 🧠 Como Explicar Isso em Entrevista
-
-Uma boa forma de resumir é:
-
-> "A lógica principal fica concentrada na camada de serviço, onde são aplicadas regras como transições de estado, antifraude, reembolsos e idempotência. Os controllers permanecem leves, os repositories cuidam da persistência e preocupações transversais como auditoria, scheduler e webhooks são disparadas a partir da camada de service."
-
-### 🏁 Por Que Isso Importa
-
-Essa arquitetura garante:
-
-* consistência nas operações financeiras
-* proteção contra requisições duplicadas
-* rastreabilidade de ações críticas
-* facilidade de manutenção e escalabilidade
-
-Em resumo:
-
-**o sistema se comporta como um backend de pagamentos real, e não apenas como uma API CRUD**
 
 ---
 
@@ -458,7 +439,7 @@ http://localhost:8080/swagger-ui/index.html
 ## 👨‍💻 Autor
 
 Carlos Eduardo Freire de Souza  
-Desenvolvedor Backend focado em Java, APIs e integração com IA
+Desenvolvedor Backend focado em Java, APIs e sistemas Backend escaláveis
 
 GitHub: https://github.com/souzacef  
 LinkedIn: https://linkedin.com/in/carlosefsouza
@@ -473,7 +454,6 @@ Este projeto foi construído como peça de portfólio com foco em:
 * arquitetura limpa
 * comportamento inspirado em produção
 * regras de negócio orientadas a estado
-* preparação para entrevistas
 
 ---
 

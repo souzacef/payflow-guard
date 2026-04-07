@@ -159,7 +159,7 @@ Controller → Service → Repository → Database
 
 ---
 
-## 🧠 Architecture Walkthrough (Interview-Friendly)
+## 🧠 Architecture Walkthrough
 
 The system follows a layered architecture with clear separation of concerns:
 
@@ -276,25 +276,6 @@ Webhook event
 
 * **Resilience**
   Webhooks are retried on failure
-
-### 🧠 How to Explain This in an Interview
-
-A good summary is:
-
-> "The system is centered on a service layer that enforces business rules such as lifecycle transitions, fraud checks, refunds, and idempotency. Controllers stay thin, repositories handle persistence, and cross-cutting concerns like audit logging, schedulers, and webhooks are triggered from the service layer."
-
-### 🏁 Why This Matters
-
-This architecture ensures:
-
-* consistency in financial operations
-* protection against duplicate requests
-* traceability of all critical actions
-* maintainability and scalability
-
-In short:
-
-**it behaves like a real payment system, not just a CRUD API**
 
 ---
 
@@ -458,7 +439,7 @@ http://localhost:8080/swagger-ui/index.html
 ## 👨‍💻 Author
 
 Carlos Eduardo Freire de Souza  
-Backend Developer focused on Java, APIs, and AI integration
+Backend Developer focused on Java, APIs and scalable backend systems
 
 GitHub: https://github.com/souzacef  
 LinkedIn: https://linkedin.com/in/carlosefsouza
@@ -473,7 +454,6 @@ This project was built as a portfolio piece with focus on:
 * clean architecture
 * production-like behavior
 * stateful business rules
-* interview readiness
 
 ---
 
