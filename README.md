@@ -4,13 +4,13 @@
 
 PayFlow Guard is a backend API for merchant and payment management with a focus on security, scalability, and fraud-aware architecture.
 
-Built with Java 21 and Spring Boot, the project models a real-world payment processing backend, including authentication, merchant management, payment lifecycle, refunds, and webhook systems.
+Built with Java 21 and Spring Boot, the project models a real-world payment processing backend, including authentication, merchant management, payment lifecycle, refunds, idempotency, audit logs, automatic capture, and webhook delivery with retry.
 
 ---
 
 ## 🎯 Purpose
 
-This project simulates a real-world payment backend similar to systems used by fintech companies.
+This project was designed to simulate a real-world payment backend similar to systems used by fintech companies.
 
 It focuses on:
 
@@ -30,95 +30,64 @@ It focuses on:
 * BCrypt password hashing
 * Secure login and registration
 * Protected endpoints with token validation
-* Multi-tenant data isolation
+* Multi-tenant data isolation (users only access their own data)
 * Role-based access control (USER / ADMIN)
-
----
 
 ### 🏪 Merchant Management
 
 * Create, update, delete merchants
 * Pagination, filtering, and sorting
-* Merchant status (ACTIVE / INACTIVE)
+* Merchant status management (ACTIVE / INACTIVE)
 * User-scoped data access
-
----
 
 ### 💳 Payment System
 
 * Create payments linked to merchants
 * Full lifecycle:
-
-```
-PENDING → AUTHORIZED → CAPTURED → REFUNDED / FAILED
-```
-
-* Strict transition validation
+  * `PENDING → AUTHORIZED → CAPTURED → REFUNDED / FAILED`
+* Strict state transition validation
 * Admin-controlled state updates
-* Automatic capture (scheduler)
-
----
+* Automatic capture via scheduler
 
 ### 🧪 Fraud Detection
 
-* Automatic validation during payment creation
-* Rules implemented:
-
-  * High-value transaction blocking
-  * Velocity-based blocking (too many attempts)
+* Automatic fraud validation on payment creation
+* Fraud rules:
+  * High-value transactions blocked
+  * Rapid repeated transactions blocked
 * Fraud reason stored and returned in API
 
----
+### 🔁 Idempotency
 
-### 🔁 Idempotency (Production-grade)
-
-* Prevents duplicate payments
+* Prevents duplicate payment creation
 * Uses `Idempotency-Key` header
-* Same request = same response
+* Same request returns the same payment
 * Scoped per merchant
-
----
 
 ### 💸 Refund System
 
 * Partial refunds supported
 * Multiple refunds per payment
-* Tracks:
-
-  * total refunded amount
-  * individual refund records
-
----
+* Aggregated refund tracking
+* Individual refund records persisted
 
 ### 📜 Refund History
 
-```
-GET /api/v1/payments/{id}/refunds
-```
-
-Returns full refund timeline per payment.
-
----
+* `GET /api/v1/payments/{id}/refunds`
+* Full refund timeline per payment
 
 ### ⚙️ Automatic Capture
 
 * Scheduled process:
-
-```
-AUTHORIZED → CAPTURED
-```
-
-* Emits audit logs and webhooks
-
----
+  * `AUTHORIZED → CAPTURED`
+* Emits audit log and webhook
 
 ### 📡 Webhooks
 
 * Event: `payment.status.updated`
-* Stores delivery attempts
+* Real HTTP delivery
+* Delivery tracking
 * Retry mechanism for failures
-
----
 
 ### 🧾 Audit Logging
 
@@ -129,22 +98,17 @@ Tracks:
 * overrides
 * automatic operations
 
----
-
 ### 📊 API Design
 
 * RESTful endpoints (`/api/v1/...`)
-* Clean DTO-based responses
+* Clean request/response DTOs
 * Global exception handling
-* Consistent error format
+* Consistent error response structure
 * Proper HTTP status codes
-
----
 
 ### 🧪 Tests
 
 * Integration tests:
-
   * Idempotency
   * Refund history
 
@@ -152,10 +116,10 @@ Tracks:
 
 ## 🔒 Security Highlights
 
-* Stateless authentication (JWT)
-* BCrypt password hashing
-* Spring Security filters
-* Per-user data isolation enforced at query level
+* Stateless authentication using JWT
+* Passwords stored using BCrypt hashing
+* Endpoint protection via Spring Security filters
+* User-level data isolation enforced at query level
 
 ---
 
@@ -166,49 +130,193 @@ Tracks:
 * Spring Security
 * Spring Data JPA (Hibernate)
 * PostgreSQL (Docker)
-* JWT
+* JWT (authentication)
 * Maven
-* Swagger / OpenAPI
+* Swagger / OpenAPI (springdoc)
 
 ---
 
 ## 🏗️ Architecture
 
-```
+The project follows a layered architecture:
+
+```text
 Controller → Service → Repository → Database
 ```
 
-* **Controller** → HTTP layer
-* **Service** → business logic
-* **Repository** → persistence
-* **DTOs** → API contracts
+* **Controller**: Handles HTTP requests/responses
+* **Service**: Business logic and validation
+* **Repository**: Data access (JPA)
+* **DTOs**: Clean API contracts (no entity leakage)
 
-### Cross-cutting concerns
+### Key Design Decisions
 
-* Security (JWT)
-* Audit logging
-* Webhooks
-* Scheduler
+* Use of DTOs to decouple API from persistence layer
+* Enum modeling for controlled domain values
+* Centralized exception handling with `@RestControllerAdvice`
+* Stateless authentication with JWT
+* Per-user data isolation enforced at query level
+
+---
+
+## 🧠 Architecture Walkthrough (Interview-Friendly)
+
+The system follows a layered architecture with clear separation of concerns:
+
+```text
+Controller → Service → Repository → Database
+```
+
+### 🔄 Request Flow
+
+1. A request hits the **Controller**
+2. The controller validates input and forwards it to the **Service layer**
+3. The service:
+   * applies business rules
+   * enforces state transitions
+   * handles fraud checks
+   * ensures idempotency
+4. The service interacts with the **Repository layer**
+5. The repository persists or retrieves data from the **Database**
+6. The response is mapped to a DTO and returned to the client
+
+### ⚙️ Example: Payment Creation Flow
+
+```text
+Client
+  ↓
+PaymentController
+  ↓
+PaymentService
+  ↓
+FraudCheckService
+  ↓
+Idempotency validation
+  ↓
+PaymentRepository
+  ↓
+Database
+  ↓
+PaymentResponse
+```
+
+### 🔁 Example: Payment Lifecycle Update
+
+```text
+Client
+  ↓
+PaymentController
+  ↓
+PaymentService
+  ↓
+Validate transition
+  ↓
+Save payment
+  ↓
+Audit log
+  ↓
+Webhook event
+  ↓
+Response
+```
+
+### 💸 Example: Refund Flow
+
+```text
+Client
+  ↓
+PaymentController
+  ↓
+PaymentService
+  ↓
+Validate refund rules
+  ↓
+Create refund record
+  ↓
+Update refunded total
+  ↓
+Save payment
+  ↓
+Audit log
+  ↓
+Webhook event
+  ↓
+Response
+```
+
+### 📡 Example: Automatic Capture Flow
+
+```text
+Scheduler
+  ↓
+PaymentAutoCaptureService
+  ↓
+Find AUTHORIZED payments
+  ↓
+Update to CAPTURED
+  ↓
+Audit log
+  ↓
+Webhook event
+```
+
+### 🧩 Key Design Principles
+
+* **Separation of concerns**
+  Each layer has a focused responsibility
+
+* **State-driven design**
+  Payment lifecycle is enforced through controlled transitions
+
+* **Idempotency-first mindset**
+  Prevents duplicate financial operations
+
+* **Auditability**
+  Every critical action is traceable
+
+* **Resilience**
+  Webhooks are retried on failure
+
+### 🧠 How to Explain This in an Interview
+
+A good summary is:
+
+> "The system is centered on a service layer that enforces business rules such as lifecycle transitions, fraud checks, refunds, and idempotency. Controllers stay thin, repositories handle persistence, and cross-cutting concerns like audit logging, schedulers, and webhooks are triggered from the service layer."
+
+### 🏁 Why This Matters
+
+This architecture ensures:
+
+* consistency in financial operations
+* protection against duplicate requests
+* traceability of all critical actions
+* maintainability and scalability
+
+In short:
+
+**it behaves like a real payment system, not just a CRUD API**
 
 ---
 
 ## 🔑 Authentication Flow
 
-1. Register:
+1. User registers:
 
-```
+```text
 POST /api/v1/auth/register
 ```
 
-2. Login:
+2. User logs in:
 
-```
+```text
 POST /api/v1/auth/login
 ```
 
-3. Use token:
+3. API returns JWT token
 
-```
+4. Token is used in requests:
+
+```text
 Authorization: Bearer <token>
 ```
 
@@ -216,30 +324,68 @@ Authorization: Bearer <token>
 
 ## 📦 Example Endpoints
 
-### Create Payment
+### Get current user
 
+```text
+GET /api/v1/auth/me
 ```
+
+### Create merchant
+
+```text
+POST /api/v1/merchants
+```
+
+### Get merchants (with pagination)
+
+```text
+GET /api/v1/merchants?page=0&size=20&sort=id,asc
+```
+
+### Update merchant status
+
+```text
+PATCH /api/v1/merchants/{id}/status
+```
+
+### Create payment
+
+```text
 POST /api/v1/payments
-Headers:
-  Idempotency-Key: abc-123
+Header: Idempotency-Key
 ```
 
-### Update Payment Status
+### Update payment status
 
-```
+```text
 PATCH /api/v1/payments/{id}/status
 ```
 
-### Refund Payment
+### Refund payment
 
-```
+```text
 POST /api/v1/payments/{id}/refund
 ```
 
-### Refund History
+### Refund history
 
-```
+```text
 GET /api/v1/payments/{id}/refunds
+```
+
+---
+
+## 📥 Example Response
+
+```json
+{
+  "id": 1,
+  "businessName": "My Store",
+  "email": "store@email.com",
+  "status": "ACTIVE",
+  "createdAt": "2026-03-24T10:30:00Z",
+  "updatedAt": "2026-03-24T10:30:00Z"
+}
 ```
 
 ---
@@ -259,28 +405,29 @@ cd payflow-guard
 docker compose up -d
 ```
 
-### 3. Run application
+### 3. Run the application
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-### 4. Swagger UI
+### 4. Access Swagger UI
 
 http://localhost:8080/swagger-ui/index.html
 
 ---
 
-## 🧪 Example Flow
+## 🧪 Example Test Flow
 
 1. Register user
-2. Login and obtain JWT
-3. Create merchant
-4. Create payment
-5. Authorize payment
-6. Wait for automatic capture
-7. Perform partial refunds
-8. Retrieve refund history
+2. Login and get JWT
+3. Authorize in Swagger
+4. Create merchant
+5. Create payment
+6. Move payment to `AUTHORIZED`
+7. Wait for automatic capture
+8. Perform partial refunds
+9. Retrieve refund history
 
 ---
 
@@ -295,11 +442,13 @@ http://localhost:8080/swagger-ui/index.html
 ## 📌 Roadmap
 
 * [x] Payment lifecycle
-* [x] Fraud detection
-* [x] Role-based access
+* [x] Fraud detection rules
+* [x] Role-based access (ADMIN / USER)
 * [x] Webhooks with retry
 * [x] Refund system with history
 * [x] Idempotency
+* [x] Automatic capture
+* [x] Integration tests
 * [ ] External payment gateway integration
 * [ ] FX / currency conversion
 * [ ] Advanced fraud rules
@@ -308,10 +457,10 @@ http://localhost:8080/swagger-ui/index.html
 
 ## 👨‍💻 Author
 
-Carlos Eduardo Freire de Souza
-Backend Developer focused on Java, APIs, and AI
+Carlos Eduardo Freire de Souza  
+Backend Developer focused on Java, APIs, and AI integration
 
-GitHub: https://github.com/souzacef
+GitHub: https://github.com/souzacef  
 LinkedIn: https://linkedin.com/in/carlosefsouza
 
 ---
@@ -320,9 +469,10 @@ LinkedIn: https://linkedin.com/in/carlosefsouza
 
 This project was built as a portfolio piece with focus on:
 
-* real-world backend architecture
+* real-world backend patterns
+* clean architecture
 * production-like behavior
-* stateful business logic
+* stateful business rules
 * interview readiness
 
 ---

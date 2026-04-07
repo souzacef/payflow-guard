@@ -258,3 +258,8 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 ## Day 13
 
 - [x] Add integration test for refunds
+
+## Day 14
+
+- [x] Add integration test for payment lifecycle transitions
+- [x] Validate allowed and rejected payment state changes
