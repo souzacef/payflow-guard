@@ -4,7 +4,7 @@
 
 PayFlow Guard é uma API backend para gerenciamento de merchants e pagamentos com foco em segurança, escalabilidade e arquitetura antifraude.
 
-Desenvolvido com Java 21 e Spring Boot, o projeto simula um backend de processamento de pagamentos do mundo real, incluindo autenticação, gestão de merchants, ciclo de vida de pagamentos, reembolsos, idempotência, auditoria, captura automática e webhooks com retry.
+Desenvolvido com Java 21 e Spring Boot, o projeto simula um backend de processamento de pagamentos do mundo real, incluindo autenticação, gestão de merchants, ciclo de vida de pagamentos, reembolsos, idempotência, logs de auditoria, captura automática e entrega de webhooks com retry.
 
 ---
 
@@ -89,9 +89,9 @@ O foco está em:
 * Rastreamento de tentativas
 * Retry automático em falhas
 
-### 🧾 Auditoria
+### 🧾 Logs de Auditoria
 
-Registra:
+Registram:
 
 * mudanças de status
 * reembolsos
@@ -111,6 +111,30 @@ Registra:
 * Testes de integração:
   * idempotência
   * histórico de reembolsos
+  * transições do ciclo de vida
+
+---
+
+## 🔐 Modelo de Papéis e Acesso
+
+Novos usuários são criados com o papel `USER` por padrão.
+
+Algumas operações são restritas a `ADMIN`, como:
+
+* atualizações de status de pagamento
+* overrides de status
+* reembolsos
+* inspeção de eventos de webhook e fluxos operacionais
+
+No ambiente atual de desenvolvimento, privilégios administrativos podem ser concedidos diretamente no PostgreSQL:
+
+```sql
+UPDATE users
+SET role = 'ADMIN'
+WHERE email = 'user@test.com';
+```
+
+Isso mantém o fluxo da aplicação simples, mas ainda permite testar cenários administrativos localmente.
 
 ---
 
@@ -156,6 +180,10 @@ Controller → Service → Repository → Database
 * Tratamento centralizado de exceções com `@RestControllerAdvice`
 * Autenticação stateless com JWT
 * Isolamento de dados por usuário no nível de query
+
+### Diagrama Conceitual de Arquitetura
+
+![Arquitetura do PayFlow Guard](docs/architecture-diagram.png)
 
 ---
 
@@ -412,6 +440,21 @@ http://localhost:8080/swagger-ui/index.html
 
 ---
 
+## 📡 Comportamento de Entrega de Webhooks
+
+Eventos de webhook são persistidos e rastreados.
+
+O sistema suporta:
+
+* entrega HTTP real
+* retry automático para falhas
+* rastreamento de códigos de resposta HTTP
+* armazenamento de detalhes de erro para observabilidade
+
+Se a URL de destino for inválida ou estiver inacessível, o evento é marcado como falho em vez de ser perdido silenciosamente.
+
+---
+
 ## 📸 API Preview
 
 ![Swagger Overview](docs/swagger-overview.png)
@@ -439,7 +482,7 @@ http://localhost:8080/swagger-ui/index.html
 ## 👨‍💻 Autor
 
 Carlos Eduardo Freire de Souza  
-Desenvolvedor Backend focado em Java, APIs e sistemas Backend escaláveis
+Desenvolvedor Backend focado em Java, APIs e sistemas backend escaláveis
 
 GitHub: https://github.com/souzacef  
 LinkedIn: https://linkedin.com/in/carlosefsouza

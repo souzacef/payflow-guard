@@ -111,6 +111,30 @@ Tracks:
 * Integration tests:
   * Idempotency
   * Refund history
+  * Payment lifecycle transitions
+
+---
+
+## 🔐 Roles and Access Model
+
+New users are created with the `USER` role by default.
+
+Some operations are restricted to `ADMIN`, such as:
+
+* payment status updates
+* payment status overrides
+* refunds
+* webhook event inspection and operational flows
+
+In the current development setup, admin privileges can be granted directly in PostgreSQL:
+
+```sql
+UPDATE users
+SET role = 'ADMIN'
+WHERE email = 'user@test.com';
+```
+
+This keeps the application flow simple while still allowing administrative scenarios to be tested locally.
 
 ---
 
@@ -156,6 +180,10 @@ Controller → Service → Repository → Database
 * Centralized exception handling with `@RestControllerAdvice`
 * Stateless authentication with JWT
 * Per-user data isolation enforced at query level
+
+### Conceptual Architecture Diagram
+
+![PayFlow Guard Architecture](docs/architecture-diagram.png)
 
 ---
 
@@ -409,6 +437,21 @@ http://localhost:8080/swagger-ui/index.html
 7. Wait for automatic capture
 8. Perform partial refunds
 9. Retrieve refund history
+
+---
+
+## 📡 Webhook Delivery Behavior
+
+Webhook events are persisted and tracked.
+
+The system supports:
+
+* real HTTP delivery
+* automatic retry for failed deliveries
+* tracking of response status codes
+* storage of failure details for observability
+
+If a target URL is invalid or unreachable, the event is marked as failed instead of being silently lost.
 
 ---
 
