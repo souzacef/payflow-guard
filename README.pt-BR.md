@@ -183,7 +183,7 @@ Controller → Service → Repository → Database
 
 ### Diagrama Conceitual de Arquitetura
 
-![Arquitetura do PayFlow Guard](docs/architecture-diagram.png)
+![Arquitetura do PayFlow Guard](./docs/architecture-diagram.png)
 
 ---
 
@@ -457,9 +457,9 @@ Se a URL de destino for inválida ou estiver inacessível, o evento é marcado c
 
 ## 📸 API Preview
 
-![Swagger Overview](docs/swagger-overview.png)
-![Swagger Endpoints](docs/swagger-endpoints.png)
-![Swagger Request](docs/swagger-request.png)
+![Swagger Overview](./docs/swagger-overview.png)
+![Swagger Endpoints](./docs/swagger-endpoints.png)
+![Swagger Request](./docs/swagger-request.png)
 
 ---
 

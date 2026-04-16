@@ -183,7 +183,7 @@ Controller → Service → Repository → Database
 
 ### Conceptual Architecture Diagram
 
-![PayFlow Guard Architecture](docs/architecture-diagram.png)
+![PayFlow Guard Architecture](./docs/architecture-diagram.png)
 
 ---
 
@@ -457,9 +457,9 @@ If a target URL is invalid or unreachable, the event is marked as failed instead
 
 ## 📸 API Preview
 
-![Swagger Overview](docs/swagger-overview.png)
-![Swagger Endpoints](docs/swagger-endpoints.png)
-![Swagger Request](docs/swagger-request.png)
+![Swagger Overview](./docs/swagger-overview.png)
+![Swagger Endpoints](./docs/swagger-endpoints.png)
+![Swagger Request](./docs/swagger-request.png)
 
 ---
 
