@@ -5,6 +5,7 @@ import com.carlos.payflowguard.merchant.entity.MerchantStatus;
 import com.carlos.payflowguard.merchant.repository.MerchantRepository;
 import com.carlos.payflowguard.payment.entity.Payment;
 import com.carlos.payflowguard.payment.repository.PaymentRepository;
+import com.carlos.payflowguard.testsupport.IsolatedSpringBootTest;
 import com.carlos.payflowguard.user.entity.Role;
 import com.carlos.payflowguard.user.entity.User;
 import com.carlos.payflowguard.user.repository.UserRepository;
@@ -17,7 +18,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -30,8 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
-class PaymentIdempotencyIntegrationTest {
+class PaymentIdempotencyIntegrationTest extends IsolatedSpringBootTest {
 
     @Autowired
     private MockMvc mockMvc;

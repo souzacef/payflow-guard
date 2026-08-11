@@ -6,6 +6,7 @@ import com.carlos.payflowguard.merchant.repository.MerchantRepository;
 import com.carlos.payflowguard.payment.entity.Payment;
 import com.carlos.payflowguard.payment.entity.PaymentStatus;
 import com.carlos.payflowguard.payment.repository.PaymentRepository;
+import com.carlos.payflowguard.testsupport.IsolatedSpringBootTest;
 import com.carlos.payflowguard.user.entity.Role;
 import com.carlos.payflowguard.user.entity.User;
 import com.carlos.payflowguard.user.repository.UserRepository;
@@ -17,18 +18,20 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
-public class PaymentLifecycleIntegrationTest {
+public class PaymentLifecycleIntegrationTest extends IsolatedSpringBootTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -115,6 +118,19 @@ public class PaymentLifecycleIntegrationTest {
 
         Payment capturedPayment = paymentRepository.findById(payment.getId()).orElseThrow();
         assertEquals(PaymentStatus.CAPTURED, capturedPayment.getStatus());
+
+        verify(webhookEventService).publishPaymentStatusUpdated(
+                any(Payment.class),
+                eq(PaymentStatus.PENDING),
+                eq(PaymentStatus.AUTHORIZED),
+                eq("Funds reserved")
+        );
+        verify(webhookEventService).publishPaymentStatusUpdated(
+                any(Payment.class),
+                eq(PaymentStatus.AUTHORIZED),
+                eq(PaymentStatus.CAPTURED),
+                eq("Settlement completed")
+        );
     }
 
     @Test
@@ -142,5 +158,6 @@ public class PaymentLifecycleIntegrationTest {
 
         Payment unchangedPayment = paymentRepository.findById(payment.getId()).orElseThrow();
         assertEquals(PaymentStatus.PENDING, unchangedPayment.getStatus());
+        verifyNoInteractions(webhookEventService);
     }
 }

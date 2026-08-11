@@ -8,6 +8,7 @@ import com.carlos.payflowguard.payment.entity.PaymentStatus;
 import com.carlos.payflowguard.payment.entity.Refund;
 import com.carlos.payflowguard.payment.repository.PaymentRepository;
 import com.carlos.payflowguard.payment.repository.RefundRepository;
+import com.carlos.payflowguard.testsupport.IsolatedSpringBootTest;
 import com.carlos.payflowguard.user.entity.Role;
 import com.carlos.payflowguard.user.entity.User;
 import com.carlos.payflowguard.user.repository.UserRepository;
@@ -19,7 +20,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -30,8 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
-public class RefundHistoryIntegrationTest {
+public class RefundHistoryIntegrationTest extends IsolatedSpringBootTest {
 
     @Autowired
     private MockMvc mockMvc;
