@@ -181,6 +181,22 @@ Controller → Service → Repository → Database
 * Stateless authentication with JWT
 * Per-user data isolation enforced at query level
 
+### Design Pattern: Chain of Responsibility
+
+Payment creation applies multiple fraud checks without coupling `PaymentService` to individual rules. `FraudRule` is the common handler contract, currently implemented by `AmountThresholdFraudRule` and `VelocityFraudRule`. `FraudCheckService` coordinates the chain by receiving every `FraudRule` bean as an ordered list through Spring dependency injection.
+
+```text
+PaymentService
+  ↓
+FraudCheckService
+  ↓ ordered List<FraudRule>
+AmountThresholdFraudRule (@Order(100))
+  ↓ passes
+VelocityFraudRule (@Order(200))
+```
+
+Rules run in ascending order and evaluation stops at the first failure, avoiding unnecessary work such as a database-backed velocity check when the amount rule has already rejected the payment. This is a Spring-friendly Chain of Responsibility (an ordered validation pipeline): handlers do not manually store references to their successors. A new rule can be added as another ordered Spring component without modifying `PaymentService` or `FraudCheckService`.
+
 ### Conceptual Architecture Diagram
 
 ![PayFlow Guard Architecture](./docs/architecture-diagram.png)

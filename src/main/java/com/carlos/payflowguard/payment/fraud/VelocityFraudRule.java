@@ -3,12 +3,14 @@ package com.carlos.payflowguard.payment.fraud;
 import com.carlos.payflowguard.merchant.entity.Merchant;
 import com.carlos.payflowguard.payment.repository.PaymentRepository;
 import com.carlos.payflowguard.payment.service.FraudCheckResult;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 @Component
+@Order(200)
 public class VelocityFraudRule implements FraudRule {
 
     private final PaymentRepository paymentRepository;
