@@ -80,12 +80,14 @@ It focuses on:
 
 * Scheduled process:
   * `AUTHORIZED → CAPTURED`
-* Emits audit log and webhook
+* Publishes the same lifecycle events used by manual transitions
+* Audit and webhook side effects are handled by observers
 
 ### 📡 Webhooks
 
 * Event: `payment.status.updated`
-* Real HTTP delivery
+* Durable `PENDING` event persistence before delivery
+* Real HTTP delivery after the payment transaction commits
 * Delivery tracking
 * Retry mechanism for failures
 
@@ -108,10 +110,9 @@ Tracks:
 
 ### 🧪 Tests
 
-* Integration tests:
-  * Idempotency
-  * Refund history
-  * Payment lifecycle transitions
+* Focused unit tests for fraud rules, event publishers, and listeners
+* Isolated integration tests for idempotency, refunds, lifecycle transitions, and transaction phases
+* In-memory H2 test database with scheduling disabled
 
 ---
 
@@ -181,25 +182,63 @@ Controller → Service → Repository → Database
 * Stateless authentication with JWT
 * Per-user data isolation enforced at query level
 
-### Design Pattern: Chain of Responsibility
-
-Payment creation applies multiple fraud checks without coupling `PaymentService` to individual rules. `FraudRule` is the common handler contract, currently implemented by `AmountThresholdFraudRule` and `VelocityFraudRule`. `FraudCheckService` coordinates the chain by receiving every `FraudRule` bean as an ordered list through Spring dependency injection.
-
-```text
-PaymentService
-  ↓
-FraudCheckService
-  ↓ ordered List<FraudRule>
-AmountThresholdFraudRule (@Order(100))
-  ↓ passes
-VelocityFraudRule (@Order(200))
-```
-
-Rules run in ascending order and evaluation stops at the first failure, avoiding unnecessary work such as a database-backed velocity check when the amount rule has already rejected the payment. This is a Spring-friendly Chain of Responsibility (an ordered validation pipeline): handlers do not manually store references to their successors. A new rule can be added as another ordered Spring component without modifying `PaymentService` or `FraudCheckService`.
-
 ### Conceptual Architecture Diagram
 
 ![PayFlow Guard Architecture](./docs/architecture-diagram.png)
+
+---
+
+## 🧩 Design Patterns
+
+PayFlow Guard applies patterns where they solve existing payment-processing problems. The repository does not contain isolated pattern demos or extra abstractions added only to increase the pattern count.
+
+### 1. Chain of Responsibility — fraud validation
+
+**Problem.** Payment creation needs several independent fraud checks, but coupling every check directly to `PaymentService` would make the service grow whenever a rule was added or reordered.
+
+**Implementation.** `FraudRule` is the common handler contract. Spring discovers the concrete `AmountThresholdFraudRule` and `VelocityFraudRule` beans and injects them into `FraudCheckService` as an ordered `List<FraudRule>`. `@Order(100)` runs the inexpensive amount check first; `@Order(200)` runs the database-backed velocity check second. The coordinator stops at the first rejection and returns that result unchanged.
+
+```mermaid
+flowchart LR
+    A[PaymentService] --> B[FraudCheckService<br/>ordered List of FraudRule]
+    B --> C[AmountThresholdFraudRule<br/>Order 100]
+    C -->|Pass| D[VelocityFraudRule<br/>Order 200]
+    C -->|Reject| E[Reject payment]
+    D -->|Pass| F[Continue creation]
+    D -->|Reject| E
+```
+
+This is intentionally a Spring-friendly, externally coordinated Chain of Responsibility. The rule objects do not manually hold references to successor handlers. A new rule is added as another ordered Spring component, without changing `PaymentService` or the coordinator.
+
+### 2. Observer / Publisher-Subscriber — payment lifecycle side effects
+
+**Problem.** Status changes, overrides, refunds, and automatic capture previously coordinated audit logging and webhook delivery directly. That mixed lifecycle decisions with side effects and made additional reactions harder to introduce safely.
+
+**Implementation.** Transactional `PaymentService` operations publish either `PaymentStatusChangedEvent` or `PaymentRefundCreatedEvent`. These immutable records contain value snapshots and IDs rather than JPA entities. `PaymentAuditEventListener` writes the mandatory audit at `BEFORE_COMMIT`, while `PaymentWebhookEventListener` persists a durable `PENDING` webhook record in the current transaction and publishes `WebhookDeliveryRequestedEvent`. `WebhookDeliveryEventListener` performs HTTP only at `AFTER_COMMIT`; delivery results are saved with `REQUIRES_NEW`.
+
+```mermaid
+flowchart TD
+    subgraph TX [Payment lifecycle transaction]
+        A[PaymentService<br/>Transactional operation] -->|publishes| B[Immutable lifecycle event]
+        B --> C[PaymentAuditEventListener<br/>BEFORE_COMMIT]
+        B --> D[PaymentWebhookEventListener<br/>current transaction]
+        D --> E[Persist PENDING WebhookEvent]
+        E --> F[WebhookDeliveryRequestedEvent]
+    end
+    F --> G[WebhookDeliveryEventListener<br/>AFTER_COMMIT]
+    G --> H[HTTP delivery]
+    H --> I[Persist SENT or FAILED<br/>REQUIRES_NEW]
+```
+
+The payment transition, mandatory audit, and webhook enqueue therefore commit or roll back together. HTTP is outside that transaction, so an ordinary delivery failure cannot undo an already committed payment. Additional observers can react to lifecycle events without adding orchestration to `PaymentService` or `PaymentAutoCaptureService`.
+
+Spring application events remain synchronous and in-process. This design does not claim the guarantees of Kafka, RabbitMQ, asynchronous execution, a transactional outbox, CQRS, or event sourcing.
+
+### Architectural evolution and bootcamp context
+
+The project first extracted fraud checks into independent, ordered rules and formalized them as a Chain of Responsibility. Payment lifecycle auditing and webhook publication were then decoupled through Observer / Publisher-Subscriber, with explicit transaction phases for atomic persistence and after-commit HTTP delivery.
+
+That evolution makes PayFlow Guard suitable as a Design Patterns bootcamp submission: the patterns address real fraud-validation and payment-lifecycle concerns instead of serving as standalone classroom examples.
 
 ---
 
@@ -255,11 +294,15 @@ PaymentService
   ↓
 Validate transition
   ↓
-Save payment
+Save payment and publish PaymentStatusChangedEvent
   ↓
-Audit log
+Observers join the current transaction
+  ├─ Persist PENDING webhook
+  └─ Persist mandatory audit BEFORE_COMMIT
   ↓
-Webhook event
+Commit payment transaction
+  ↓
+AFTER_COMMIT: deliver webhook and persist result in REQUIRES_NEW
   ↓
 Response
 ```
@@ -279,11 +322,13 @@ Create refund record
   ↓
 Update refunded total
   ↓
-Save payment
+Save payment and publish PaymentRefundCreatedEvent
   ↓
-Audit log
+Observers join the current transaction
+  ├─ Persist PENDING webhook
+  └─ Persist mandatory audit BEFORE_COMMIT
   ↓
-Webhook event
+Commit, then deliver webhook AFTER_COMMIT
   ↓
 Response
 ```
@@ -297,11 +342,11 @@ PaymentAutoCaptureService
   ↓
 Find AUTHORIZED payments
   ↓
-Update to CAPTURED
+Delegate each payment to PaymentService
   ↓
-Audit log
+Transactional capture publishes PaymentStatusChangedEvent
   ↓
-Webhook event
+Audit and webhook observers handle side effects
 ```
 
 ### 🧩 Key Design Principles
@@ -442,7 +487,21 @@ http://localhost:8080/swagger-ui/index.html
 
 ---
 
-## 🧪 Example Test Flow
+## 🧪 Testing
+
+Run the complete suite with:
+
+```bash
+./mvnw test
+```
+
+The ordinary test suite uses an isolated in-memory H2 database, disables scheduling, and requires neither PostgreSQL nor Docker. General integration tests do not make outbound webhook calls. A dedicated transaction integration test starts a loopback-only HTTP server and exercises the real after-commit webhook delivery path without contacting an external service.
+
+Current suite status at the time of this documentation update: **40 tests passing** across fraud validation, payment lifecycle events, audit/webhook observers, transaction phases, idempotency, and refunds.
+
+---
+
+## 🧪 Manual API Test Flow
 
 1. Register user
 2. Login and get JWT
@@ -458,7 +517,7 @@ http://localhost:8080/swagger-ui/index.html
 
 ## 📡 Webhook Delivery Behavior
 
-Webhook events are persisted and tracked.
+Lifecycle transactions persist webhook events as `PENDING` before commit. HTTP delivery begins only after the payment transaction commits, and the delivery result is persisted independently.
 
 The system supports:
 
@@ -468,6 +527,8 @@ The system supports:
 * storage of failure details for observability
 
 If a target URL is invalid or unreachable, the event is marked as failed instead of being silently lost.
+
+Delivery uses synchronous, in-process Spring events rather than a distributed message broker or transactional outbox.
 
 ---
 
