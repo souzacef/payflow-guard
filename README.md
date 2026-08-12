@@ -43,8 +43,10 @@ It focuses on:
 ### 💳 Payment System
 
 * Create payments linked to merchants
-* Full lifecycle:
-  * `PENDING → AUTHORIZED → CAPTURED → REFUNDED / FAILED`
+* Supported lifecycle:
+  * `PENDING → AUTHORIZED → CAPTURED → REFUNDED`
+  * `PENDING → FAILED` or `AUTHORIZED → FAILED`
+  * Full refunds move `CAPTURED` payments to `REFUNDED`; partial refunds keep them `CAPTURED`
 * Strict state transition validation
 * Admin-controlled state updates
 * Automatic capture via scheduler
@@ -142,9 +144,11 @@ This keeps the application flow simple while still allowing administrative scena
 ## 🔒 Security Highlights
 
 * Stateless authentication using JWT
+* JWT signing material supplied at runtime rather than committed for normal application use
 * Passwords stored using BCrypt hashing
 * Endpoint protection via Spring Security filters
 * User-level data isolation enforced at query level
+* Loopback-only webhook destination unless an external target is explicitly configured
 
 ---
 
@@ -257,8 +261,8 @@ Controller → Service → Repository → Database
 3. The service:
    * applies business rules
    * enforces state transitions
-   * handles fraud checks
    * ensures idempotency
+   * handles fraud checks
 4. The service interacts with the **Repository layer**
 5. The repository persists or retrieves data from the **Database**
 6. The response is mapped to a DTO and returned to the client
@@ -272,9 +276,13 @@ PaymentController
   ↓
 PaymentService
   ↓
-FraudCheckService
+Validate Idempotency-Key and load merchant
   ↓
-Idempotency validation
+Idempotency lookup (return the existing payment when found)
+  ↓
+Validate active merchant
+  ↓
+FraudCheckService
   ↓
 PaymentRepository
   ↓
@@ -475,13 +483,29 @@ cd payflow-guard
 docker compose up -d
 ```
 
-### 3. Run the application
+### 3. Configure runtime secrets
+
+`JWT_SECRET` is required and has no repository default. Supply a strong value before starting the application. For example, generate an ephemeral local-development value with:
+
+```bash
+export JWT_SECRET="$(openssl rand -base64 48)"
+```
+
+Webhook delivery is optional for local startup. If `PAYFLOW_WEBHOOK_URL` is omitted, PayFlow Guard uses the loopback-only default `http://127.0.0.1:9999/webhook`, so webhook data is not sent to an external destination. To use a real receiver, configure it explicitly:
+
+```bash
+export PAYFLOW_WEBHOOK_URL="https://your-endpoint.example/webhook"
+```
+
+The corresponding Spring properties are `app.security.jwt.secret` and `app.webhooks.payment-status-url`.
+
+### 4. Run the application
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-### 4. Access Swagger UI
+### 5. Access Swagger UI
 
 http://localhost:8080/swagger-ui/index.html
 
@@ -489,15 +513,15 @@ http://localhost:8080/swagger-ui/index.html
 
 ## 🧪 Testing
 
-Run the complete suite with:
+With Java 21, run the complete suite with:
 
 ```bash
 ./mvnw test
 ```
 
-The ordinary test suite uses an isolated in-memory H2 database, disables scheduling, and requires neither PostgreSQL nor Docker. General integration tests do not make outbound webhook calls. A dedicated transaction integration test starts a loopback-only HTTP server and exercises the real after-commit webhook delivery path without contacting an external service.
+The ordinary test suite uses an isolated in-memory H2 database and an explicit test-only JWT secret, disables scheduling, and requires neither PostgreSQL nor Docker/Podman. General integration tests do not make outbound webhook calls. A dedicated transaction integration test starts a loopback-only HTTP server and exercises the real after-commit webhook delivery path without contacting an external service.
 
-Current suite status at the time of this documentation update: **40 tests passing** across fraud validation, payment lifecycle events, audit/webhook observers, transaction phases, idempotency, and refunds.
+Current suite status at the time of this documentation update: **44 tests passing** across configuration safety, authentication tokens, fraud validation, payment lifecycle events, audit/webhook observers, transaction phases, idempotency, and refunds.
 
 ---
 
@@ -526,7 +550,7 @@ The system supports:
 * tracking of response status codes
 * storage of failure details for observability
 
-If a target URL is invalid or unreachable, the event is marked as failed instead of being silently lost.
+Ordinary HTTP/network delivery failures and non-2xx responses are persisted as `FAILED` and can be retried. The application does not claim that every malformed URI or unexpected runtime configuration error is automatically converted into a failed delivery record.
 
 Delivery uses synchronous, in-process Spring events rather than a distributed message broker or transactional outbox.
 

@@ -8,9 +8,10 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Authentication
 - [x] Merchant Management
 - [x] Payment Processing
-- [ ] Fraud Analysis
-- [ ] Webhooks and FX
-- [ ] Tests and Documentation
+- [x] Fraud Analysis
+- [x] Webhooks
+- [ ] FX
+- [x] Tests and Documentation
 
 ## Current Focus
 - [x] Expose timestamps in API responses
@@ -18,7 +19,7 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 - [x] Add merchant status update endpoint
 - [x] Improve enum-based error handling
 - [x] Write README
-- [ ] Add tests
+- [x] Add tests
 
 ## Done
 - [x] Repository created
@@ -263,3 +264,13 @@ Build a portfolio-ready payment processing backend with fraud analysis using Jav
 
 - [x] Add integration test for payment lifecycle transitions
 - [x] Validate allowed and rejected payment state changes
+
+## Submission hardening
+
+- [x] Formalize fraud validation as an ordered Spring-friendly Chain of Responsibility
+- [x] Decouple lifecycle audit and webhook side effects with immutable Spring application events
+- [x] Make audit persistence participate before commit and webhook HTTP delivery start after commit
+- [x] Isolate the ordinary test suite with H2, disabled scheduling, and no external webhook traffic
+- [x] Externalize JWT signing material through `JWT_SECRET`
+- [x] Replace the external webhook default with `PAYFLOW_WEBHOOK_URL` and a loopback-only fallback
+- [x] Synchronize English and Brazilian Portuguese architecture and setup documentation

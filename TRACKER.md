@@ -21,6 +21,7 @@ This document summarizes the implemented features and current project status.
 - [x] Spring Security configuration
 - [x] Role-based access control (ADMIN / USER)
 - [x] Endpoint protection with token validation
+- [x] JWT signing material supplied through `JWT_SECRET`
 
 ---
 
@@ -39,8 +40,8 @@ This document summarizes the implemented features and current project status.
 - [x] Payment lifecycle:
   - [x] PENDING → AUTHORIZED
   - [x] AUTHORIZED → CAPTURED
-  - [x] CAPTURED → REFUNDED
-  - [x] Failure handling (FAILED)
+  - [x] CAPTURED → REFUNDED after a full refund
+  - [x] PENDING / AUTHORIZED → FAILED
 - [x] Strict lifecycle transition validation
 - [x] Admin-controlled status updates
 
@@ -51,6 +52,8 @@ This document summarizes the implemented features and current project status.
 - [x] High-value transaction blocking
 - [x] Velocity-based blocking
 - [x] Fraud reason tracking
+- [x] Common `FraudRule` contract with Spring-discovered handlers
+- [x] Explicit rule ordering and first-failure short-circuiting
 
 ---
 
@@ -84,7 +87,8 @@ This document summarizes the implemented features and current project status.
 - [x] Scheduler for payment capture
 - [x] Transition:
   - AUTHORIZED → CAPTURED
-- [x] Audit + webhook triggered automatically
+- [x] Publishes the same lifecycle event used by manual capture
+- [x] Audit + webhook handled by observers
 
 ---
 
@@ -92,8 +96,11 @@ This document summarizes the implemented features and current project status.
 
 - [x] Event: `payment.status.updated`
 - [x] Persistent webhook event storage
+- [x] Durable `PENDING` enqueue in the payment transaction
+- [x] HTTP delivery only after commit
 - [x] Retry mechanism for failed deliveries
 - [x] HTTP response tracking (status + error)
+- [x] `PAYFLOW_WEBHOOK_URL` override with loopback-only repository default
 
 ---
 
@@ -103,6 +110,7 @@ This document summarizes the implemented features and current project status.
 - [x] Refund operations tracked
 - [x] Automatic operations logged
 - [x] Reason metadata stored
+- [x] Mandatory audit observer participates before commit
 
 ---
 
@@ -111,6 +119,10 @@ This document summarizes the implemented features and current project status.
 - [x] Idempotency integration test
 - [x] Refund history integration test
 - [x] Payment lifecycle integration test
+- [x] Fraud rule and chain coordinator unit tests
+- [x] Observer and transaction-phase tests
+- [x] H2 isolation with scheduling disabled
+- [x] No external webhook traffic in the ordinary test suite
 
 ---
 
@@ -119,6 +131,7 @@ This document summarizes the implemented features and current project status.
 - [x] Swagger / OpenAPI integration
 - [x] Bilingual README (EN / PT-BR)
 - [x] Architecture walkthrough
+- [x] Applied Design Patterns documentation
 - [x] Feature tracker
 
 ---
