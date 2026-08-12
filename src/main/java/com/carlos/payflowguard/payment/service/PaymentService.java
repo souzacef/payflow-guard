@@ -1,6 +1,5 @@
 package com.carlos.payflowguard.payment.service;
 
-import com.carlos.payflowguard.audit.service.AuditLogService;
 import com.carlos.payflowguard.common.exception.ResourceNotFoundException;
 import com.carlos.payflowguard.common.exception.UnauthorizedException;
 import com.carlos.payflowguard.common.response.PageResponse;
@@ -16,17 +15,22 @@ import com.carlos.payflowguard.payment.dto.UpdatePaymentStatusRequest;
 import com.carlos.payflowguard.payment.entity.Payment;
 import com.carlos.payflowguard.payment.entity.PaymentStatus;
 import com.carlos.payflowguard.payment.entity.Refund;
+import com.carlos.payflowguard.payment.event.PaymentEventSnapshot;
+import com.carlos.payflowguard.payment.event.PaymentRefundCreatedEvent;
+import com.carlos.payflowguard.payment.event.PaymentStatusChangedEvent;
+import com.carlos.payflowguard.payment.event.PaymentTransitionSource;
 import com.carlos.payflowguard.payment.repository.PaymentRepository;
 import com.carlos.payflowguard.payment.repository.RefundRepository;
 import com.carlos.payflowguard.user.entity.Role;
 import com.carlos.payflowguard.user.entity.User;
 import com.carlos.payflowguard.user.repository.UserRepository;
-import com.carlos.payflowguard.webhook.service.WebhookEventService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -37,26 +41,23 @@ public class PaymentService {
     private final MerchantRepository merchantRepository;
     private final UserRepository userRepository;
     private final FraudCheckService fraudCheckService;
-    private final AuditLogService auditLogService;
-    private final WebhookEventService webhookEventService;
     private final RefundRepository refundRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public PaymentService(
             PaymentRepository paymentRepository,
             MerchantRepository merchantRepository,
             UserRepository userRepository,
             FraudCheckService fraudCheckService,
-            AuditLogService auditLogService,
-            WebhookEventService webhookEventService,
-            RefundRepository refundRepository
+            RefundRepository refundRepository,
+            ApplicationEventPublisher eventPublisher
     ) {
         this.paymentRepository = paymentRepository;
         this.merchantRepository = merchantRepository;
         this.userRepository = userRepository;
         this.fraudCheckService = fraudCheckService;
-        this.auditLogService = auditLogService;
-        this.webhookEventService = webhookEventService;
         this.refundRepository = refundRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     private User getAuthenticatedUser() {
@@ -261,6 +262,7 @@ public class PaymentService {
                 .toList();
     }
 
+    @Transactional
     public PaymentResponse updatePaymentStatus(Long id, UpdatePaymentStatusRequest request) {
         User user = getAuthenticatedUser();
         ensureAdmin(user);
@@ -285,25 +287,19 @@ public class PaymentService {
 
         Payment updatedPayment = paymentRepository.save(payment);
 
-        auditLogService.log(
-                "PAYMENT_STATUS_UPDATED",
-                "Payment",
-                payment.getId(),
-                user.getEmail(),
-                "Changed from " + oldStatus + " to " + newStatus +
-                        (request.getReason() != null ? " | Reason: " + request.getReason() : "")
-        );
-
-        webhookEventService.publishPaymentStatusUpdated(
-                updatedPayment,
+        eventPublisher.publishEvent(new PaymentStatusChangedEvent(
+                toEventSnapshot(updatedPayment),
                 oldStatus,
                 updatedPayment.getStatus(),
-                request.getReason()
-        );
+                user.getEmail(),
+                request.getReason(),
+                PaymentTransitionSource.ADMIN_STATUS_UPDATE
+        ));
 
         return toResponse(updatedPayment);
     }
 
+    @Transactional
     public PaymentResponse overridePaymentStatus(Long id, OverridePaymentStatusRequest request) {
         User user = getAuthenticatedUser();
         ensureAdmin(user);
@@ -321,25 +317,19 @@ public class PaymentService {
 
         Payment updatedPayment = paymentRepository.save(payment);
 
-        auditLogService.log(
-                "PAYMENT_STATUS_OVERRIDDEN",
-                "Payment",
-                payment.getId(),
-                user.getEmail(),
-                "Overridden from " + oldStatus + " to " + request.getStatus() +
-                        " | Reason: " + request.getReason()
-        );
-
-        webhookEventService.publishPaymentStatusUpdated(
-                updatedPayment,
+        eventPublisher.publishEvent(new PaymentStatusChangedEvent(
+                toEventSnapshot(updatedPayment),
                 oldStatus,
                 updatedPayment.getStatus(),
-                request.getReason()
-        );
+                user.getEmail(),
+                request.getReason(),
+                PaymentTransitionSource.ADMIN_OVERRIDE
+        ));
 
         return toResponse(updatedPayment);
     }
 
+    @Transactional
     public PaymentResponse refundPayment(Long id, RefundPaymentRequest request) {
         User user = getAuthenticatedUser();
         ensureAdmin(user);
@@ -386,24 +376,51 @@ public class PaymentService {
 
         Payment updatedPayment = paymentRepository.save(payment);
 
-        auditLogService.log(
-                "PAYMENT_REFUND_CREATED",
-                "Payment",
-                payment.getId(),
-                user.getEmail(),
-                "RefundId=" + refund.getId() +
-                        " | Amount=" + requestedAmount +
-                        " | TotalRefunded=" + newRefundedAmount +
-                        (request.getReason() != null ? " | Reason: " + request.getReason() : "")
-        );
-
-        webhookEventService.publishPaymentStatusUpdated(
-                updatedPayment,
+        eventPublisher.publishEvent(new PaymentRefundCreatedEvent(
+                toEventSnapshot(updatedPayment),
+                refund.getId(),
+                requestedAmount,
+                newRefundedAmount,
                 oldStatus,
                 updatedPayment.getStatus(),
+                user.getEmail(),
                 request.getReason()
-        );
+        ));
 
         return toResponse(updatedPayment);
+    }
+
+    @Transactional
+    public void captureAutomatically(Long paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found with id: " + paymentId));
+
+        PaymentStatus oldStatus = payment.getStatus();
+
+        if (oldStatus != PaymentStatus.AUTHORIZED) {
+            return;
+        }
+
+        payment.setStatus(PaymentStatus.CAPTURED);
+        Payment updatedPayment = paymentRepository.save(payment);
+
+        eventPublisher.publishEvent(new PaymentStatusChangedEvent(
+                toEventSnapshot(updatedPayment),
+                oldStatus,
+                updatedPayment.getStatus(),
+                "system",
+                "Automatic capture",
+                PaymentTransitionSource.AUTOMATIC_CAPTURE
+        ));
+    }
+
+    private PaymentEventSnapshot toEventSnapshot(Payment payment) {
+        return new PaymentEventSnapshot(
+                payment.getId(),
+                payment.getMerchant().getId(),
+                payment.getAmountMinor(),
+                payment.getCurrency(),
+                payment.getFraudReason()
+        );
     }
 }

@@ -2,18 +2,21 @@ package com.carlos.payflowguard.webhook.service;
 
 import com.carlos.payflowguard.common.exception.ResourceNotFoundException;
 import com.carlos.payflowguard.common.response.PageResponse;
-import com.carlos.payflowguard.payment.entity.Payment;
 import com.carlos.payflowguard.payment.entity.PaymentStatus;
+import com.carlos.payflowguard.payment.event.PaymentEventSnapshot;
 import com.carlos.payflowguard.webhook.dto.WebhookEventResponse;
 import com.carlos.payflowguard.webhook.entity.WebhookEvent;
 import com.carlos.payflowguard.webhook.entity.WebhookEventStatus;
 import com.carlos.payflowguard.webhook.repository.WebhookEventRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.net.URI;
@@ -33,17 +36,26 @@ public class WebhookEventService {
     private final HttpClient httpClient;
     private final String paymentStatusUrl;
 
+    @Autowired
     public WebhookEventService(
             WebhookEventRepository webhookEventRepository,
             @Value("${app.webhooks.payment-status-url}") String paymentStatusUrl
     ) {
-        this.webhookEventRepository = webhookEventRepository;
-        this.paymentStatusUrl = paymentStatusUrl;
-        this.httpClient = HttpClient.newHttpClient();
+        this(webhookEventRepository, paymentStatusUrl, HttpClient.newHttpClient());
     }
 
-    public void publishPaymentStatusUpdated(
-            Payment payment,
+    WebhookEventService(
+            WebhookEventRepository webhookEventRepository,
+            String paymentStatusUrl,
+            HttpClient httpClient
+    ) {
+        this.webhookEventRepository = webhookEventRepository;
+        this.paymentStatusUrl = paymentStatusUrl;
+        this.httpClient = httpClient;
+    }
+
+    public Long enqueuePaymentStatusUpdated(
+            PaymentEventSnapshot payment,
             PaymentStatus oldStatus,
             PaymentStatus newStatus,
             String reason
@@ -53,13 +65,19 @@ public class WebhookEventService {
         WebhookEvent event = new WebhookEvent();
         event.setEventType("payment.status.updated");
         event.setEntityName("Payment");
-        event.setEntityId(payment.getId());
+        event.setEntityId(payment.paymentId());
         event.setPayload(payload);
         event.setTargetUrl(paymentStatusUrl);
 
-        WebhookEvent savedEvent = webhookEventRepository.save(event);
+        return webhookEventRepository.save(event).getId();
+    }
 
-        deliver(savedEvent);
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void deliverEvent(Long eventId) {
+        WebhookEvent event = webhookEventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Webhook event not found with id: " + eventId));
+
+        deliver(event);
     }
 
     public PageResponse<WebhookEventResponse> getAllEvents(int page, int size, String sort) {
@@ -180,13 +198,13 @@ public class WebhookEventService {
     }
 
     private String buildPaymentStatusPayload(
-            Payment payment,
+            PaymentEventSnapshot payment,
             PaymentStatus oldStatus,
             PaymentStatus newStatus,
             String reason
     ) {
         String safeReason = reason == null ? "" : escapeJson(reason);
-        String fraudReason = payment.getFraudReason() == null ? "" : escapeJson(payment.getFraudReason());
+        String fraudReason = payment.fraudReason() == null ? "" : escapeJson(payment.fraudReason());
 
         return """
                 {
@@ -200,12 +218,12 @@ public class WebhookEventService {
                   "fraudReason": "%s"
                 }
                 """.formatted(
-                payment.getId(),
-                payment.getMerchant().getId(),
+                payment.paymentId(),
+                payment.merchantId(),
                 oldStatus.name(),
                 newStatus.name(),
-                payment.getAmountMinor(),
-                escapeJson(payment.getCurrency()),
+                payment.amountMinor(),
+                escapeJson(payment.currency()),
                 safeReason,
                 fraudReason
         );

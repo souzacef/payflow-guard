@@ -5,6 +5,7 @@ import com.carlos.payflowguard.merchant.entity.MerchantStatus;
 import com.carlos.payflowguard.merchant.repository.MerchantRepository;
 import com.carlos.payflowguard.payment.entity.Payment;
 import com.carlos.payflowguard.payment.entity.PaymentStatus;
+import com.carlos.payflowguard.payment.event.PaymentEventSnapshot;
 import com.carlos.payflowguard.payment.repository.PaymentRepository;
 import com.carlos.payflowguard.testsupport.IsolatedSpringBootTest;
 import com.carlos.payflowguard.user.entity.Role;
@@ -24,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -51,6 +53,13 @@ public class PaymentLifecycleIntegrationTest extends IsolatedSpringBootTest {
 
     @BeforeEach
     void setup() {
+        when(webhookEventService.enqueuePaymentStatusUpdated(
+                any(PaymentEventSnapshot.class),
+                any(PaymentStatus.class),
+                any(PaymentStatus.class),
+                any()
+        )).thenReturn(101L, 102L);
+
         paymentRepository.deleteAll();
         merchantRepository.deleteAll();
         userRepository.deleteAll();
@@ -119,18 +128,20 @@ public class PaymentLifecycleIntegrationTest extends IsolatedSpringBootTest {
         Payment capturedPayment = paymentRepository.findById(payment.getId()).orElseThrow();
         assertEquals(PaymentStatus.CAPTURED, capturedPayment.getStatus());
 
-        verify(webhookEventService).publishPaymentStatusUpdated(
-                any(Payment.class),
+        verify(webhookEventService).enqueuePaymentStatusUpdated(
+                any(PaymentEventSnapshot.class),
                 eq(PaymentStatus.PENDING),
                 eq(PaymentStatus.AUTHORIZED),
                 eq("Funds reserved")
         );
-        verify(webhookEventService).publishPaymentStatusUpdated(
-                any(Payment.class),
+        verify(webhookEventService).enqueuePaymentStatusUpdated(
+                any(PaymentEventSnapshot.class),
                 eq(PaymentStatus.AUTHORIZED),
                 eq(PaymentStatus.CAPTURED),
                 eq("Settlement completed")
         );
+        verify(webhookEventService).deliverEvent(101L);
+        verify(webhookEventService).deliverEvent(102L);
     }
 
     @Test

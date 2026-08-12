@@ -1,5 +1,6 @@
 package com.carlos.payflowguard.payment;
 
+import com.carlos.payflowguard.audit.repository.AuditLogRepository;
 import com.carlos.payflowguard.merchant.entity.Merchant;
 import com.carlos.payflowguard.merchant.entity.MerchantStatus;
 import com.carlos.payflowguard.merchant.repository.MerchantRepository;
@@ -24,6 +25,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -39,6 +41,9 @@ class PaymentIdempotencyIntegrationTest extends IsolatedSpringBootTest {
     private PaymentRepository paymentRepository;
 
     @Autowired
+    private AuditLogRepository auditLogRepository;
+
+    @Autowired
     private MerchantRepository merchantRepository;
 
     @Autowired
@@ -51,6 +56,7 @@ class PaymentIdempotencyIntegrationTest extends IsolatedSpringBootTest {
 
     @BeforeEach
     void setUp() {
+        auditLogRepository.deleteAll();
         paymentRepository.deleteAll();
         merchantRepository.deleteAll();
         userRepository.deleteAll();
@@ -109,5 +115,40 @@ class PaymentIdempotencyIntegrationTest extends IsolatedSpringBootTest {
         assertEquals(1, payments.size());
         assertEquals("abc-123", payments.get(0).getIdempotencyKey());
         assertEquals(777L, payments.get(0).getAmountMinor());
+        assertEquals(0, auditLogRepository.count());
+        verifyNoInteractions(webhookEventService);
+    }
+
+    @Test
+    void fraudRejectedCreationDoesNotEmitLifecycleSideEffects() throws Exception {
+        String requestBody = """
+                {
+                  "merchantId": %d,
+                  "amountMinor": 100001,
+                  "currency": "BRL",
+                  "description": "Fraud rejection test"
+                }
+                """.formatted(merchant.getId());
+
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken(
+                        "test@example.com",
+                        null,
+                        AuthorityUtils.createAuthorityList("ROLE_ADMIN")
+                );
+
+        mockMvc.perform(post("/api/v1/payments")
+                        .with(authentication(auth))
+                        .header("Idempotency-Key", "fraud-123")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk());
+
+        List<Payment> payments = paymentRepository.findAll();
+        assertEquals(1, payments.size());
+        assertEquals("FAILED", payments.getFirst().getStatus().name());
+        assertEquals("Amount exceeds allowed threshold", payments.getFirst().getFraudReason());
+        assertEquals(0, auditLogRepository.count());
+        verifyNoInteractions(webhookEventService);
     }
 }
