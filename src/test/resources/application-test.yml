@@ -11,6 +11,10 @@ spring:
     show-sql: false
 
 app:
+  security:
+    jwt:
+      secret: "test-only-payflow-guard-jwt-signing-key-1234567890"
+
   scheduling:
     enabled: false
 

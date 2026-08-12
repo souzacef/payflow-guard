@@ -13,5 +13,9 @@ spring:
     show-sql: true
 
 app:
+  security:
+    jwt:
+      secret: "${JWT_SECRET}"
+
   webhooks:
-    payment-status-url: "https://webhook.site/8c5a5747-3f6a-4e90-8876-3d936a7c7f3e"
+    payment-status-url: "${PAYFLOW_WEBHOOK_URL:http://127.0.0.1:9999/webhook}"
